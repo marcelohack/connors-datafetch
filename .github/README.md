@@ -50,15 +50,15 @@ Before pushing, run these commands to catch issues early:
 
 ```bash
 # Format code
-black connors_downloader/ tests/
-isort connors_downloader/ tests/
+black connors_datafetch/ tests/
+isort connors_datafetch/ tests/
 
 # Run linting
-flake8 connors_downloader/ tests/
+flake8 connors_datafetch/ tests/
 
 # Type checking
-mypy connors_downloader/
+mypy connors_datafetch/
 
 # Run tests with coverage
-pytest tests/ --cov=connors_downloader --cov-report=term-missing
+pytest tests/ --cov=connors_datafetch --cov-report=term-missing
 ```

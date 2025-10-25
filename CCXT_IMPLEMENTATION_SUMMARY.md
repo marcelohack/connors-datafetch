@@ -32,7 +32,7 @@
 ---
 
 ### 2. CLI Updates ✅
-**File:** `connors/cli/downloader.py`
+**File:** `connors/cli/datafetch.py`
 
 **Changes:**
 - Added `--exchange` parameter (required for ccxt datasource)
@@ -43,7 +43,7 @@
 
 **New Usage:**
 ```bash
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange binance \
   --ticker BTC/USDT \
@@ -200,7 +200,7 @@ Comprehensive implementation plan covering:
 
 ### Modified (3 files)
 1. `requirements.txt` - Added ccxt dependency
-2. `connors/cli/downloader.py` - Added --exchange parameter, extended intervals
+2. `connors/cli/datafetch.py` - Added --exchange parameter, extended intervals
 3. `connors/services/download_service.py` - Added exchange support
 
 ---
@@ -209,7 +209,7 @@ Comprehensive implementation plan covering:
 
 ### Download Bitcoin from Binance
 ```bash
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange binance \
   --ticker BTC/USDT \
@@ -220,7 +220,7 @@ python -m connors.cli.downloader \
 
 ### Download Ethereum from Kraken
 ```bash
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange kraken \
   --ticker ETH/USD \
@@ -233,7 +233,7 @@ python -m connors.cli.downloader \
 ### Backtest with Crypto Data
 ```bash
 # 1. Download
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange binance \
   --ticker BTC/USDT \

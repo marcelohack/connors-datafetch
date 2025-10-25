@@ -88,7 +88,7 @@ class CCXTDataSource:
 
 **CLI:**
 ```bash
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --datasource-params "exchange:binance" \
   --ticker BTC/USDT \
@@ -108,7 +108,7 @@ class CCXTKrakenDataSource:
 
 **CLI:**
 ```bash
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt_binance \
   --ticker BTC/USDT
 ```
@@ -117,7 +117,7 @@ python -m connors.cli.downloader \
 
 #### Option C: Add --exchange CLI parameter (MOST USER-FRIENDLY)
 ```bash
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange binance \
   --ticker BTC/USDT
@@ -348,7 +348,7 @@ def test_ccxt_binance():
 
 ### Phase 2: CLI Updates ✅
 
-**File:** `connors/cli/downloader.py`
+**File:** `connors/cli/datafetch.py`
 
 **Changes:**
 
@@ -394,7 +394,7 @@ datasource_instance = self.registry.create_datasource(datasource, **kwargs)
 **Usage examples:**
 ```bash
 # Binance BTC/USDT hourly data
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange binance \
   --ticker BTC/USDT \
@@ -403,7 +403,7 @@ python -m connors.cli.downloader \
   --interval 1h
 
 # Kraken ETH/USD daily data
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange kraken \
   --ticker ETH/USD \
@@ -411,7 +411,7 @@ python -m connors.cli.downloader \
   --timespan 1Y
 
 # Coinbase BTC/USD 15-minute data
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange coinbase \
   --ticker BTC/USD \
@@ -582,7 +582,7 @@ touch connors/datasources/ccxt.py
 
 ### Step 3: Update CLI
 ```bash
-# Edit connors/cli/downloader.py
+# Edit connors/cli/datafetch.py
 # Add --exchange argument
 # Extend interval choices
 ```
@@ -610,9 +610,9 @@ pytest tests/test_ccxt_datasource.py -v
 ### Step 7: Test End-to-End
 ```bash
 # Test various exchanges
-python -m connors.cli.downloader --datasource ccxt --exchange binance --ticker BTC/USDT --timespan 1M
-python -m connors.cli.downloader --datasource ccxt --exchange kraken --ticker ETH/USD --timespan 1M
-python -m connors.cli.downloader --datasource ccxt --exchange coinbase --ticker BTC/USD --timespan 1M
+python -m connors.cli.datafetch --datasource ccxt --exchange binance --ticker BTC/USDT --timespan 1M
+python -m connors.cli.datafetch --datasource ccxt --exchange kraken --ticker ETH/USD --timespan 1M
+python -m connors.cli.datafetch --datasource ccxt --exchange coinbase --ticker BTC/USD --timespan 1M
 ```
 
 ### Step 8: Commit and Push
@@ -657,7 +657,7 @@ git push origin ccxt_crypto_datasource
 
 ### Download BTC/USDT from Binance (1 year, hourly)
 ```bash
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange binance \
   --ticker BTC/USDT \
@@ -668,7 +668,7 @@ python -m connors.cli.downloader \
 
 ### Download ETH/USD from Kraken (custom range, daily)
 ```bash
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange kraken \
   --ticker ETH/USD \
@@ -681,7 +681,7 @@ python -m connors.cli.downloader \
 ### Backtest with CCXT Data
 ```bash
 # Download data
-python -m connors.cli.downloader \
+python -m connors.cli.datafetch \
   --datasource ccxt \
   --exchange binance \
   --ticker BTC/USDT \
