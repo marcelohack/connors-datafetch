@@ -169,3 +169,35 @@ Examples:
 ## Python Version
 
 This project requires Python 3.13+ as specified in `pyproject.toml`. Ensure compatibility when adding new dependencies or language features.
+
+## GitHub Actions CI/CD
+
+The project uses GitHub Actions for automated testing and deployment.
+
+### Workflows
+
+**CI Pipeline (`.github/workflows/ci.yml`)**
+- Triggers on push to `main` and pull requests
+- Three parallel jobs after dependency installation:
+  1. **Lint and Type Check**: black, isort, flake8, mypy
+  2. **Test Suite**: pytest with coverage reports
+  3. **Build Package**: builds distribution and validates with twine
+
+**Release (`.github/workflows/release.yml`)**
+- Triggers on GitHub releases or manual dispatch
+- Builds and publishes to PyPI (requires `PYPI_TOKEN` secret)
+- Manual dispatch publishes to Test PyPI (requires `TEST_PYPI_TOKEN` secret)
+
+### Pre-commit Checks
+
+Run these locally before pushing to catch CI failures early:
+```bash
+# Format and lint
+black connors_downloader/ tests/
+isort connors_downloader/ tests/
+flake8 connors_downloader/ tests/
+mypy connors_downloader/
+
+# Test
+pytest tests/ --cov=connors_downloader
+```

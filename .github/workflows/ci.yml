@@ -1,0 +1,125 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and Type Check
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set Up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements.txt
+          requirements-dev.txt
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
+    - name: Black Code Formatting Check
+      run: |
+        black --check connors_downloader/ tests/
+      continue-on-error: true
+
+    - name: isort Import Sorting Check
+      run: |
+        isort --check-only connors_downloader/ tests/
+      continue-on-error: true
+
+    - name: Flake8 Linting
+      run: |
+        flake8 connors_downloader/ tests/
+      continue-on-error: true
+
+    - name: Mypy Static Type Checking
+      run: |
+        mypy connors_downloader/
+      continue-on-error: true
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set Up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements.txt
+          requirements-dev.txt
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
+    - name: Run Tests
+      run: |
+        pytest tests/ --tb=short -v
+
+    - name: Generate Coverage Report
+      run: |
+        pytest tests/ --cov=connors_downloader --cov-report=xml --cov-report=html --cov-report=term-missing
+
+    - name: Upload Coverage Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmlcov/
+        retention-days: 7
+      if: always()
+
+  package:
+    name: Build Package
+    runs-on: ubuntu-24.04
+    needs: [lint, test]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set Up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Install Build Tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build Distribution
+      run: |
+        python -m build
+
+    - name: Check Distribution
+      run: |
+        twine check dist/*
+
+    - name: Upload Distribution Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: distribution
+        path: dist/
+        retention-days: 7

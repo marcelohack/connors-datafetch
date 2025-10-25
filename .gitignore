@@ -132,3 +132,14 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Ruff
+.ruff_cache/
+
+# uv
+.uv/
+uv.lock
+
+# Downloaded data (from this project)
+# Uncomment if you don't want to track downloaded datasets locally
+# ~/.connors/
