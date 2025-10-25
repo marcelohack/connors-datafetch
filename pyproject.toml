@@ -1,0 +1,152 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "connors-downloader"
+version = "0.1.0"
+description = "Financial data downloader with support for multiple data sources"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+maintainers = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+keywords = ["finance", "data", "downloader", "stocks", "crypto", "yfinance", "polygon", "ccxt"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Typing :: Typed",
+]
+requires-python = ">=3.13"
+dependencies = [
+    # Core data handling
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    # Data sources
+    "yfinance>=0.2.18",
+    "requests>=2.31.0",
+    "httpx>=0.25.0",
+    "ccxt>=4.0.0",
+    # Date/time handling
+    "pytz>=2023.3",
+    # Configuration
+    "python-dotenv>=1.0.0",
+    # CLI interface
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    # Web interface component
+    "streamlit>=1.28.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "black>=23.9.0",
+    "isort>=5.12.0",
+    "flake8>=6.1.0",
+    "mypy>=1.6.0",
+]
+types = [
+    "types-requests>=2.31.0",
+    "types-pytz>=2023.3.0",
+    "pandas-stubs>=2.0.0",
+]
+
+[project.scripts]
+connors-download = "connors_downloader.cli.downloader:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/connors-downloader"
+Repository = "https://github.com/yourusername/connors-downloader"
+Issues = "https://github.com/yourusername/connors-downloader/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["connors_downloader*"]
+exclude = ["tests*", "docs*"]
+
+[tool.setuptools.package-data]
+"connors_downloader" = ["py.typed"]
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ['py313']
+include = '\.pyi?$'
+
+# isort configuration
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["connors_downloader"]
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "yfinance.*",
+    "ccxt.*",
+    "streamlit.*",
+]
+ignore_missing_imports = true
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=connors_downloader",
+    "--cov-report=term-missing",
+]
+testpaths = ["tests"]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["connors_downloader"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
