@@ -65,9 +65,6 @@ types = [
     "pandas-stubs>=2.0.0",
 ]
 
-[project.scripts]
-connors-download = "connors_downloader.cli.downloader:main"
-
 [project.urls]
 Homepage = "https://github.com/yourusername/connors-downloader"
 Repository = "https://github.com/yourusername/connors-downloader"
