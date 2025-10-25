@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pandas as pd
 import pytest
 
-from connors_downloader.datasources.ccxt import CCXTDataSource
+from connors_datafetch.datasources.ccxt import CCXTDataSource
 
 
 class TestCCXTDataSource:

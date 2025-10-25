@@ -3,8 +3,8 @@ from typing import cast
 import pandas as pd
 import yfinance as yf
 
-from connors_downloader.core.datasource import MarketDataSource
-from connors_downloader.core.registry import registry
+from connors_datafetch.core.datasource import MarketDataSource
+from connors_datafetch.core.registry import registry
 
 
 @registry.register_datasource("yfinance")

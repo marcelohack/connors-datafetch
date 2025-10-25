@@ -1,6 +1,6 @@
-# Connors Downloader
+# Connors DataFetch
 
-Financial data downloader with support for multiple data sources including stocks, forex, and cryptocurrency markets.
+Financial data fetch with support for multiple data sources including stocks, forex, and cryptocurrency markets.
 
 ## Features
 
@@ -14,7 +14,7 @@ Financial data downloader with support for multiple data sources including stock
 ## Installation
 
 ```bash
-pip install connors-downloader
+pip install connors-datafetch
 ```
 
 ### Optional Dependencies
@@ -36,35 +36,35 @@ For API-based datasources, you'll need API keys:
 Download stock data:
 ```bash
 # Download 1 year of Apple stock data (default)
-connors-download --datasource yfinance --ticker AAPL
+connors-datafetch --datasource yfinance --ticker AAPL
 
 # Download with specific timespan
-connors-download --datasource yfinance --ticker MSFT --timespan 6M
+connors-datafetch --datasource yfinance --ticker MSFT --timespan 6M
 
 # Download year-to-date data
-connors-download --datasource yfinance --ticker TSLA --timespan YTD
+connors-datafetch --datasource yfinance --ticker TSLA --timespan YTD
 
 # Download with custom date range
-connors-download --datasource yfinance --ticker AAPL \
+connors-datafetch --datasource yfinance --ticker AAPL \
     --start 2023-01-01 --end 2023-12-31 --interval 1wk
 
 # Download Australian stock with market suffix
-connors-download --datasource yfinance --ticker BHP \
+connors-datafetch --datasource yfinance --ticker BHP \
     --market australia --timespan 2Y
 
 # Export as JSON
-connors-download --datasource yfinance --ticker AAPL \
+connors-datafetch --datasource yfinance --ticker AAPL \
     --timespan 3M --format json
 ```
 
 Download cryptocurrency data:
 ```bash
 # Download BTC/USDT from Binance (1 month, 1-hour candles)
-connors-download --datasource ccxt --exchange binance \
+connors-datafetch --datasource ccxt --exchange binance \
     --ticker BTC/USDT --interval 1h --timespan 1M
 
 # Download ETH/USD from Kraken (daily candles)
-connors-download --datasource ccxt --exchange kraken \
+connors-datafetch --datasource ccxt --exchange kraken \
     --ticker ETH/USD --interval 1d \
     --start 2024-01-01 --end 2024-12-31
 ```
@@ -72,10 +72,10 @@ connors-download --datasource ccxt --exchange kraken \
 ### Programmatic Usage
 
 ```python
-from connors_downloader.services.download_service import DownloadService
+from connors_datafetch.services.datafetch_service import DataFetchService
 
 # Initialize service
-service = DownloadService()
+service = DataFetchService()
 
 # Download data
 result = service.download_data(
@@ -155,7 +155,7 @@ Filename format:
 ## CLI Options
 
 ```bash
-connors-download --help
+connors-datafetch --help
 
 Options:
   --datasource {yfinance,polygon,finnhub,fmp,ccxt}
@@ -182,8 +182,8 @@ Options:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/connors-downloader.git
-cd downloader
+git clone https://github.com/yourusername/connors-datafetch.git
+cd datafetch
 
 # Install in development mode
 pip install -e ".[dev]"
@@ -192,7 +192,7 @@ pip install -e ".[dev]"
 pytest
 
 # Run with coverage
-pytest --cov=connors_downloader
+pytest --cov=connors_datafetch
 ```
 
 ## License
@@ -201,4 +201,4 @@ MIT License
 
 ## Related Projects
 
-- **connors-trading**: Full trading strategy backtesting and analysis platform that uses this downloader
+- **connors-trading**: Full trading strategy backtesting and analysis platform that uses this datafetch

@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "connors-downloader"
+name = "connors-datafetch"
 version = "0.1.0"
-description = "Financial data downloader with support for multiple data sources"
+description = "Financial data fetcher with support for multiple data sources"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -14,7 +14,7 @@ authors = [
 maintainers = [
     {name = "Your Name", email = "your.email@example.com"},
 ]
-keywords = ["finance", "data", "downloader", "stocks", "crypto", "yfinance", "polygon", "ccxt"]
+keywords = ["finance", "data", "datafetch", "fetcher", "stocks", "crypto", "yfinance", "polygon", "ccxt"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Financial and Insurance Industry",
@@ -66,17 +66,17 @@ types = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/connors-downloader"
-Repository = "https://github.com/yourusername/connors-downloader"
-Issues = "https://github.com/yourusername/connors-downloader/issues"
+Homepage = "https://github.com/yourusername/connors-datafetch"
+Repository = "https://github.com/yourusername/connors-datafetch"
+Issues = "https://github.com/yourusername/connors-datafetch/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["connors_downloader*"]
+include = ["connors_datafetch*"]
 exclude = ["tests*", "docs*"]
 
 [tool.setuptools.package-data]
-"connors_downloader" = ["py.typed"]
+"connors_datafetch" = ["py.typed"]
 
 # Black configuration
 [tool.black]
@@ -88,7 +88,7 @@ include = '\.pyi?$'
 [tool.isort]
 profile = "black"
 line_length = 88
-known_first_party = ["connors_downloader"]
+known_first_party = ["connors_datafetch"]
 
 # MyPy configuration
 [tool.mypy]
@@ -118,7 +118,7 @@ minversion = "7.0"
 addopts = [
     "--strict-markers",
     "--strict-config",
-    "--cov=connors_downloader",
+    "--cov=connors_datafetch",
     "--cov-report=term-missing",
 ]
 testpaths = ["tests"]
@@ -130,7 +130,7 @@ filterwarnings = [
 
 # Coverage configuration
 [tool.coverage.run]
-source = ["connors_downloader"]
+source = ["connors_datafetch"]
 branch = true
 omit = [
     "*/tests/*",

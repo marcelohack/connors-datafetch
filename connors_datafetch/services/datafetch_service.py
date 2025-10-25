@@ -1,7 +1,7 @@
 """
-Download Service
+DataFetch Service
 
-Provides high-level interface for financial data downloading operations,
+Provides high-level interface for financial data fetching operations,
 integrating with data sources and organized file storage.
 """
 
@@ -14,20 +14,20 @@ from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 
-import connors_downloader.datasources.polygon
+import connors_datafetch.datasources.polygon
 
 # Import all datasources to ensure registration
-import connors_downloader.datasources.yfinance  # noqa: F401
-import connors_downloader.datasources.ccxt  # noqa: F401
-from connors_downloader.config.manager import DownloadConfigManager
-from connors_downloader.core.registry import registry
-from connors_downloader.core.timespan import TimespanCalculator
-from connors_downloader.services.base import BaseService
+import connors_datafetch.datasources.yfinance  # noqa: F401
+import connors_datafetch.datasources.ccxt  # noqa: F401
+from connors_datafetch.config.manager import DataFetchConfigManager
+from connors_datafetch.core.registry import registry
+from connors_datafetch.core.timespan import TimespanCalculator
+from connors_datafetch.services.base import BaseService
 
 
 @dataclass
-class DownloadResult:
-    """Container for download results"""
+class DataFetchResult:
+    """Container for datafetch results"""
 
     ticker: str
     datasource: str
@@ -41,13 +41,13 @@ class DownloadResult:
     error: Optional[str] = None
 
 
-class DownloadService(BaseService):
-    """Service for financial data downloading operations"""
+class DataFetchService(BaseService):
+    """Service for financial data fetching operations"""
 
     def __init__(self) -> None:
         super().__init__()
         self.registry = registry
-        self.config_manager = DownloadConfigManager()
+        self.config_manager = DataFetchConfigManager()
 
     def get_datasources(self) -> List[str]:
         """Get list of available data sources"""
@@ -321,7 +321,7 @@ class DownloadService(BaseService):
         timeframe: Optional[str] = None,
         exchange: Optional[str] = None,
         include_datasource: bool = False,
-    ) -> DownloadResult:
+    ) -> DataFetchResult:
         """
         Download financial data and save to specified format
 
@@ -339,7 +339,7 @@ class DownloadService(BaseService):
             exchange: Exchange name for ccxt datasource (e.g., "binance", "kraken")
 
         Returns:
-            DownloadResult object containing data and metadata
+            DataFetchResult object containing data and metadata
         """
         try:
             # Calculate dates from timeframe if not provided
@@ -445,7 +445,7 @@ class DownloadService(BaseService):
             if progress_callback:
                 progress_callback("Download completed!")
 
-            return DownloadResult(
+            return DataFetchResult(
                 ticker=ticker,
                 datasource=datasource,
                 market=market,
@@ -460,7 +460,7 @@ class DownloadService(BaseService):
             self.logger.error(f"Download failed: {e}")
             if progress_callback:
                 progress_callback(f"Error: {e}")
-            return DownloadResult(
+            return DataFetchResult(
                 ticker=ticker,
                 datasource=datasource,
                 market=market,

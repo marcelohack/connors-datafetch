@@ -6,7 +6,7 @@ from datetime import date, datetime
 
 import pytest
 
-from connors_downloader.core.timespan import TimespanCalculator, TimeframeCalculator
+from connors_datafetch.core.timespan import TimespanCalculator, TimeframeCalculator
 
 
 class TestTimespanCalculator:

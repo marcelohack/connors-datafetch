@@ -6,10 +6,10 @@ from unittest.mock import MagicMock, Mock, patch
 import pandas as pd
 import pytest
 
-from connors_downloader.datasources.finnhub import FinnhubDataSource
-from connors_downloader.datasources.fmp import FinancialModelingPrepDataSource
-from connors_downloader.datasources.polygon import PolygonDataSource
-from connors_downloader.datasources.yfinance import YfinanceDataSource
+from connors_datafetch.datasources.finnhub import FinnhubDataSource
+from connors_datafetch.datasources.fmp import FinancialModelingPrepDataSource
+from connors_datafetch.datasources.polygon import PolygonDataSource
+from connors_datafetch.datasources.yfinance import YfinanceDataSource
 
 
 class TestYfinanceDataSource:

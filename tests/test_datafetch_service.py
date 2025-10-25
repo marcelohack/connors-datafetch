@@ -1,5 +1,5 @@
 """
-Test suite for DownloadService
+Test suite for DataFetchService
 
 Tests the download service functionality including data validation,
 market configurations, file operations, and error handling.
@@ -14,16 +14,16 @@ from unittest.mock import MagicMock, Mock, patch
 import pandas as pd
 import pytest
 
-from connors_downloader.services.download_service import DownloadResult, DownloadService
+from connors_datafetch.services.datafetch_service import DataFetchResult, DataFetchService
 
 
-class TestDownloadService:
-    """Test suite for DownloadService"""
+class TestDataFetchService:
+    """Test suite for DataFetchService"""
 
     @pytest.fixture
     def service(self):
-        """Create a DownloadService instance for testing"""
-        return DownloadService()
+        """Create a DataFetchService instance for testing"""
+        return DataFetchService()
 
     @pytest.fixture
     def sample_data(self):
@@ -176,7 +176,7 @@ class TestDownloadService:
     def test_calculate_dates_from_timespan_error_handling(self, service):
         """Test error handling in timespan calculation"""
         with patch(
-            "connors_downloader.core.timespan.TimespanCalculator.calculate_dates",
+            "connors_datafetch.core.timespan.TimespanCalculator.calculate_dates",
             side_effect=Exception("Timeframe error"),
         ):
             dates = service.calculate_dates_from_timeframe(timeframe="INVALID")
@@ -304,7 +304,7 @@ class TestDownloadService:
                 end="2024-01-05",
             )
 
-            assert isinstance(result, DownloadResult)
+            assert isinstance(result, DataFetchResult)
             assert result.ticker == "AAPL"
             assert result.datasource == "yfinance"
             assert len(result.data) == 5

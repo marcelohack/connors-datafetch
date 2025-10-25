@@ -19,7 +19,7 @@ except ImportError:
         "Install it with: pip install ccxt"
     )
 
-from connors_downloader.core.registry import registry
+from connors_datafetch.core.registry import registry
 
 
 @registry.register_datasource("ccxt")

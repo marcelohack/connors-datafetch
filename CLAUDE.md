@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Connors Downloader is a financial data downloader library that supports multiple data sources (stocks, forex, crypto) with a unified interface. It provides both a CLI tool and a programmatic Python API.
+Connors DataFetch is a financial data downloader library that supports multiple data sources (stocks, forex, crypto) with a unified interface. It provides both a CLI tool and a programmatic Python API.
 
 ## Development Commands
 
@@ -20,37 +20,37 @@ pip install -e ".[dev]"
 pytest
 
 # Run with coverage report
-pytest --cov=connors_downloader
+pytest --cov=connors_datafetch
 
 # Run specific test file
-pytest tests/test_download_service.py
+pytest tests/test_datafetch_service.py
 
 # Run specific test function
-pytest tests/test_download_service.py::test_function_name
+pytest tests/test_datafetch_service.py::test_function_name
 ```
 
 ### Code Quality
 ```bash
 # Format code with black
-black connors_downloader tests
+black connors_datafetch tests
 
 # Sort imports with isort
-isort connors_downloader tests
+isort connors_datafetch tests
 
 # Type checking with mypy
-mypy connors_downloader
+mypy connors_datafetch
 
 # Linting with flake8
-flake8 connors_downloader
+flake8 connors_datafetch
 ```
 
 ### Running the CLI
 ```bash
 # Basic usage (installed as editable package)
-connors-download --datasource yfinance --ticker AAPL --timespan 1Y
+connors-datafetch --datasource yfinance --ticker AAPL --timespan 1Y
 
 # Run directly from source
-python -m connors_downloader.cli.downloader --datasource yfinance --ticker AAPL
+python -m connors_datafetch.cli.downloader --datasource yfinance --ticker AAPL
 ```
 
 ## Architecture
@@ -74,7 +74,7 @@ python -m connors_downloader.cli.downloader --datasource yfinance --ticker AAPL
 - Special handling for YTD (year-to-date)
 - Fallback to custom date ranges when timespan not provided
 
-**Download Service (`services/download_service.py`)**
+**DataFetch Service (`services/datafetch_service.py`)**
 - High-level interface for downloading financial data
 - Orchestrates registry, config manager, and data sources
 - Handles file naming, output formats (CSV/JSON), and storage
@@ -107,12 +107,12 @@ Each datasource is a separate module in `datasources/` that registers itself:
 ### Data Flow
 
 1. User provides: datasource, ticker, dates/timespan, interval, market (optional), exchange (optional for ccxt)
-2. `DownloadService` validates parameters and calculates date range from timespan if needed
+2. `DataFetchService` validates parameters and calculates date range from timespan if needed
 3. Config manager applies market suffix to ticker if applicable
 4. Registry creates appropriate datasource instance
 5. Datasource fetches data and returns DataFrame with standardized schema
 6. Service saves to CSV/JSON with generated filename
-7. Returns `DownloadResult` with data, file path, and metadata
+7. Returns `DataFetchResult` with data, file path, and metadata
 
 ### File Naming Convention
 
@@ -133,13 +133,13 @@ Examples:
 
 ### Adding a New Data Source
 
-1. Create file in `connors_downloader/datasources/your_source.py`
-2. Import registry: `from connors_downloader.core.registry import registry`
+1. Create file in `connors_datafetch/datasources/your_source.py`
+2. Import registry: `from connors_datafetch.core.registry import registry`
 3. Decorate class with: `@registry.register_datasource("your_source")`
 4. Implement `fetch(symbol, start, end, interval)` method
 5. Return DataFrame with lowercase columns: `[open, high, low, close, volume]`
 6. Set DatetimeIndex named `'date'`
-7. Import in `services/download_service.py` to ensure registration
+7. Import in `services/datafetch_service.py` to ensure registration
 
 ### Type Checking
 
@@ -159,7 +159,7 @@ Examples:
 ## Environment Variables
 
 - `CONNORS_HOME`: Override default app directory (`~/.connors`)
-- `DOWNLOAD_CONFIG`: Default market configuration (default: "america")
+- `DATAFETCH_CONFIG`: Default market configuration (default: "america")
 - `POLYGON_API_KEY`: Polygon.io API key
 - `FINNHUB_API_KEY`: Finnhub API key
 - `FMP_API_KEY`: Financial Modeling Prep API key
@@ -193,11 +193,11 @@ The project uses GitHub Actions for automated testing and deployment.
 Run these locally before pushing to catch CI failures early:
 ```bash
 # Format and lint
-black connors_downloader/ tests/
-isort connors_downloader/ tests/
-flake8 connors_downloader/ tests/
-mypy connors_downloader/
+black connors_datafetch/ tests/
+isort connors_datafetch/ tests/
+flake8 connors_datafetch/ tests/
+mypy connors_datafetch/
 
 # Test
-pytest tests/ --cov=connors_downloader
+pytest tests/ --cov=connors_datafetch
 ```
