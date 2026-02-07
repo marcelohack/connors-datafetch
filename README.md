@@ -1,6 +1,10 @@
-# Connors DataFetch
+# connors-datafetch
 
-Financial data fetch with support for multiple data sources including stocks, forex, and cryptocurrency markets.
+> Part of the [Connors Trading System](https://github.com/marcelohack/connors-playground)
+
+## Overview
+
+Financial data downloader with support for multiple data sources including stocks, forex, and cryptocurrency markets. Provides both a standalone CLI (`connors-datafetch`) and integration with the playground CLI.
 
 ## Features
 
@@ -31,45 +35,7 @@ For API-based datasources, you'll need API keys:
 
 ## Quick Start
 
-### CLI Usage
-
-Download stock data:
-```bash
-# Download 1 year of Apple stock data (default)
-connors-datafetch --datasource yfinance --ticker AAPL
-
-# Download with specific timespan
-connors-datafetch --datasource yfinance --ticker MSFT --timespan 6M
-
-# Download year-to-date data
-connors-datafetch --datasource yfinance --ticker TSLA --timespan YTD
-
-# Download with custom date range
-connors-datafetch --datasource yfinance --ticker AAPL \
-    --start 2023-01-01 --end 2023-12-31 --interval 1wk
-
-# Download Australian stock with market suffix
-connors-datafetch --datasource yfinance --ticker BHP \
-    --market australia --timespan 2Y
-
-# Export as JSON
-connors-datafetch --datasource yfinance --ticker AAPL \
-    --timespan 3M --format json
-```
-
-Download cryptocurrency data:
-```bash
-# Download BTC/USDT from Binance (1 month, 1-hour candles)
-connors-datafetch --datasource ccxt --exchange binance \
-    --ticker BTC/USDT --interval 1h --timespan 1M
-
-# Download ETH/USD from Kraken (daily candles)
-connors-datafetch --datasource ccxt --exchange kraken \
-    --ticker ETH/USD --interval 1d \
-    --start 2024-01-01 --end 2024-12-31
-```
-
-### Programmatic Usage
+### Programmatic API
 
 ```python
 from connors_datafetch.services.datafetch_service import DataFetchService
@@ -81,27 +47,59 @@ service = DataFetchService()
 result = service.download_data(
     datasource="yfinance",
     ticker="AAPL",
-    timeframe="1Y",  # Use predefined timeframe
+    timeframe="1Y",
     interval="1d"
 )
 
-# Access the data
 if result.success:
     df = result.data
     print(f"Downloaded {len(df)} records")
     print(f"Saved to: {result.file_path}")
-else:
-    print(f"Error: {result.error}")
+```
 
-# Or use custom dates
-result = service.download_data(
-    datasource="yfinance",
-    ticker="MSFT",
-    start="2023-01-01",
-    end="2023-12-31",
-    interval="1wk",
-    output_format="csv"
-)
+### Standalone CLI
+
+```bash
+# Download 1 year of Apple stock data
+connors-datafetch --datasource yfinance --ticker AAPL
+
+# Download with specific timespan
+connors-datafetch --datasource yfinance --ticker MSFT --timespan 6M
+
+# Download with custom date range
+connors-datafetch --datasource yfinance --ticker AAPL \
+    --start 2023-01-01 --end 2023-12-31 --interval 1wk
+
+# Australian stock with market suffix
+connors-datafetch --datasource yfinance --ticker BHP \
+    --market australia --timespan 2Y
+
+# Cryptocurrency from Binance
+connors-datafetch --datasource ccxt --exchange binance \
+    --ticker BTC/USDT --interval 1h --timespan 1M
+```
+
+## CLI Usage
+
+The data downloading CLI is also available via [connors-playground](https://github.com/marcelohack/connors-playground):
+
+```bash
+# Download stock data
+python -m connors.cli.datafetch --datasource yfinance --ticker AAPL --timespan 6M
+
+# Download year-to-date data
+python -m connors.cli.datafetch --datasource yfinance --ticker MSFT --timespan YTD
+
+# Australian market with suffix
+python -m connors.cli.datafetch --datasource yfinance --ticker BHP --market australia --timespan 2Y
+
+# Different data sources
+python -m connors.cli.datafetch --datasource polygon --ticker TSLA --start 2023-06-01 --end 2023-06-30
+python -m connors.cli.datafetch --datasource fmp --ticker AAPL --timespan 3M
+
+# List available options
+python -m connors.cli.datafetch --list-datasources
+python -m connors.cli.datafetch --list-markets
 ```
 
 ## Available Data Sources
@@ -124,24 +122,22 @@ result = service.download_data(
 
 ## Available Markets
 
-- **america**: US stocks (no suffix)
-- **australia**: Australian stocks (.AX suffix)
-- **brazil**: Brazilian stocks (.SA suffix)
-- **canada**: Canadian stocks (.TO suffix)
-- **uk**: UK stocks (.L suffix)
-- **germany**: German stocks (.DE suffix)
-- **japan**: Japanese stocks (.T suffix)
-- **hong_kong**: Hong Kong stocks (.HK suffix)
-- **india**: Indian stocks (.NS suffix)
-- **crypto**: Cryptocurrency markets (via CCXT)
+| Market | Suffix | Example |
+|--------|--------|---------|
+| `america` | none | `AAPL` |
+| `australia` | `.AX` | `BHP.AX` |
+| `brazil` | `.SA` | `PETR4.SA` |
+| `canada` | `.TO` | `RY.TO` |
+| `uk` | `.L` | `BP.L` |
+| `germany` | `.DE` | `SAP.DE` |
+| `japan` | `.T` | `7203.T` |
+| `hong_kong` | `.HK` | `0005.HK` |
+| `india` | `.NS` | `RELIANCE.NS` |
+| `crypto` | n/a | via CCXT |
 
 ## Predefined Timespans
 
-- `1D`, `5D`, `10D`: Days
-- `1W`, `2W`: Weeks
-- `1M`, `3M`, `6M`: Months
-- `1Y`, `2Y`, `3Y`, `5Y`: Years
-- `YTD`: Year to date
+`1D`, `5D`, `10D`, `1W`, `2W`, `1M`, `3M`, `6M`, `YTD`, `1Y`, `2Y`, `3Y`, `5Y`
 
 ## Output
 
@@ -150,42 +146,12 @@ Downloaded files are saved to `~/.connors/downloads/datasets/` (or `$CONNORS_HOM
 Filename format:
 - Stocks: `{ticker}_{market}_{start}_{end}_{interval}.{csv|json}`
 - Crypto: `{ticker}_{exchange}_{start}_{end}_{interval}.{csv|json}`
-- With timeframe: `{ticker}_{market}_{timeframe}_{interval}.{csv|json}`
-
-## CLI Options
-
-```bash
-connors-datafetch --help
-
-Options:
-  --datasource {yfinance,polygon,finnhub,fmp,ccxt}
-                        Data source to use
-  --ticker TICKER       Stock ticker symbol or crypto pair (e.g., AAPL, BTC/USDT)
-  --exchange EXCHANGE   Exchange for crypto (required with ccxt datasource)
-  --market {america,australia,brazil,...}
-                        Market configuration for ticker suffix
-  --start YYYY-MM-DD    Start date
-  --end YYYY-MM-DD      End date
-  --timespan {1D,1W,1M,3M,6M,1Y,YTD,...}
-                        Predefined timespan
-  --interval {1m,5m,15m,1h,1d,1wk,1mo}
-                        Data interval (default: 1d)
-  --format {csv,json}   Output format (default: csv)
-  --output PATH         Custom output file path
-  --include-datasource  Include datasource name in filename
-  --list-datasources    List available datasources
-  --list-markets        List available markets
-  -v, --verbose         Verbose output
-```
 
 ## Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/connors-datafetch.git
-cd datafetch
-
-# Install in development mode
+git clone https://github.com/marcelohack/connors-datafetch.git
+cd connors-datafetch
 pip install -e ".[dev]"
 
 # Run tests
@@ -195,10 +161,19 @@ pytest
 pytest --cov=connors_datafetch
 ```
 
+## Related Packages
+
+| Package | Description | Links |
+|---------|-------------|-------|
+| [connors-playground](https://github.com/marcelohack/connors-playground) | CLI + Streamlit UI (integration hub) | [README](https://github.com/marcelohack/connors-playground#readme) |
+| [connors-core](https://github.com/marcelohack/connors-core) | Registry, config, indicators, metrics | [README](https://github.com/marcelohack/connors-core#readme) |
+| [connors-backtest](https://github.com/marcelohack/connors-backtest) | Backtesting service + built-in strategies | [README](https://github.com/marcelohack/connors-backtest#readme) |
+| [connors-strategies](https://github.com/marcelohack/connors-strategies) | Trading strategy collection (private) | — |
+| [connors-screener](https://github.com/marcelohack/connors-screener) | Stock screening system | [README](https://github.com/marcelohack/connors-screener#readme) |
+| [connors-sr](https://github.com/marcelohack/connors-sr) | Support & Resistance calculator | [README](https://github.com/marcelohack/connors-sr#readme) |
+| [connors-regime](https://github.com/marcelohack/connors-regime) | Market regime detection | [README](https://github.com/marcelohack/connors-regime#readme) |
+| [connors-bots](https://github.com/marcelohack/connors-bots) | Automated trading bots | [README](https://github.com/marcelohack/connors-bots#readme) |
+
 ## License
 
-MIT License
-
-## Related Projects
-
-- **connors-trading**: Full trading strategy backtesting and analysis platform that uses this datafetch
+MIT
