@@ -21,6 +21,21 @@ Financial data downloader with support for multiple data sources including stock
 pip install connors-datafetch
 ```
 
+### Local Development
+
+**Prerequisites**: Python 3.13, [pyenv](https://github.com/pyenv/pyenv) + [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv)
+
+```bash
+# 1. Create and activate a virtual environment
+pyenv virtualenv 3.13 connors-datafetch
+pyenv activate connors-datafetch
+
+# 2. Install with dev dependencies
+pip install -e ".[dev]"
+```
+
+A `.python-version` file is included so pyenv auto-activates when you `cd` into this directory.
+
 ### Optional Dependencies
 
 For cryptocurrency data via CCXT:
