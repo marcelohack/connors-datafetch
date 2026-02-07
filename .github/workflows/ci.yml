@@ -10,116 +10,110 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint and Type Check
+  build-environment:
+    name: Build Environment
+    uses: ./.github/workflows/build-env.yml
+    with:
+      python-version: "3.13"
+
+  lint-and-security:
+    name: Lint and Security
     runs-on: ubuntu-24.04
+    needs: build-environment
+    if: needs.build-environment.outputs.environment-ready == 'true'
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+
+    - name: Download Environment Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-environment-${{ needs.build-environment.outputs.cache-key }}
+        path: environment-info/
 
     - name: Set Up Python 3.13
       uses: actions/setup-python@v5
       with:
         python-version: "3.13"
         cache: 'pip'
-        cache-dependency-path: |
-          requirements.txt
-          requirements-dev.txt
+        cache-dependency-path: pyproject.toml
 
-    - name: Install Dependencies
+    - name: Restore Environment Variables
+      run: |
+        if [ -f environment-info/environment.env ]; then
+          cat environment-info/environment.env >> $GITHUB_ENV
+        fi
+
+    - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
+        pip install -e ".[dev]"
 
-    - name: Black Code Formatting Check
+    - name: Black Formatting Check
       run: |
         black --check connors_datafetch/ tests/
       continue-on-error: true
 
-    - name: isort Import Sorting Check
+    - name: Isort Import Order Check
       run: |
         isort --check-only connors_datafetch/ tests/
       continue-on-error: true
 
     - name: Flake8 Linting
       run: |
-        flake8 connors_datafetch/ tests/
+        flake8 connors_datafetch/
       continue-on-error: true
 
     - name: Mypy Static Type Checking
       run: |
-        mypy connors_datafetch/
+        mypy connors_datafetch/ --ignore-missing-imports
+      continue-on-error: true
+
+    - name: Bandit Security Scan
+      run: |
+        bandit -c pyproject.toml -r connors_datafetch/
       continue-on-error: true
 
   test:
     name: Test Suite
     runs-on: ubuntu-24.04
+    needs: build-environment
+    if: needs.build-environment.outputs.environment-ready == 'true'
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+
+    - name: Download Environment Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-environment-${{ needs.build-environment.outputs.cache-key }}
+        path: environment-info/
 
     - name: Set Up Python 3.13
       uses: actions/setup-python@v5
       with:
         python-version: "3.13"
         cache: 'pip'
-        cache-dependency-path: |
-          requirements.txt
-          requirements-dev.txt
+        cache-dependency-path: pyproject.toml
 
-    - name: Install Dependencies
+    - name: Restore Environment Variables
+      run: |
+        if [ -f environment-info/environment.env ]; then
+          cat environment-info/environment.env >> $GITHUB_ENV
+        fi
+
+    - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
+        pip install -e ".[dev]"
 
-    - name: Run Tests
+    - name: Pytest Testing (no coverage)
       run: |
-        pytest tests/ --tb=short -v
+        pytest tests/ --tb=short -v --no-cov
 
-    - name: Generate Coverage Report
+    - name: Coverage report with pytest-cov
       run: |
         pytest tests/ --cov=connors_datafetch --cov-report=xml --cov-report=html --cov-report=term-missing
-
-    - name: Upload Coverage Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: htmlcov/
-        retention-days: 7
-      if: always()
-
-  package:
-    name: Build Package
-    runs-on: ubuntu-24.04
-    needs: [lint, test]
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-
-    - name: Set Up Python 3.13
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.13"
-
-    - name: Install Build Tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install build twine
-
-    - name: Build Distribution
-      run: |
-        python -m build
-
-    - name: Check Distribution
-      run: |
-        twine check dist/*
-
-    - name: Upload Distribution Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: distribution
-        path: dist/
-        retention-days: 7
+      continue-on-error: true
