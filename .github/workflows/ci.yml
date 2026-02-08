@@ -48,6 +48,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install "connors-core @ git+https://github.com/marcelohack/connors-core.git@main"
         pip install -e ".[dev]"
 
     - name: Black Formatting Check
@@ -107,6 +108,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install "connors-core @ git+https://github.com/marcelohack/connors-core.git@main"
         pip install -e ".[dev]"
 
     - name: Pytest Testing (no coverage)

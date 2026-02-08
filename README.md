@@ -30,7 +30,10 @@ pip install connors-datafetch
 pyenv virtualenv 3.13 connors-datafetch
 pyenv activate connors-datafetch
 
-# 2. Install with dev dependencies
+# 2. Install connors packages from local checkouts (not on PyPI)
+pip install -e ../core
+
+# 3. Install with dev dependencies
 pip install -e ".[dev]"
 ```
 
