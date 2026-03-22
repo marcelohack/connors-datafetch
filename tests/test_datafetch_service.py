@@ -14,7 +14,10 @@ from unittest.mock import MagicMock, Mock, patch
 import pandas as pd
 import pytest
 
-from connors_datafetch.services.datafetch_service import DataFetchResult, DataFetchService
+from connors_datafetch.services.datafetch_service import (
+    DataFetchResult,
+    DataFetchService,
+)
 
 
 class TestDataFetchService:
@@ -116,12 +119,38 @@ class TestDataFetchService:
             assert info == {}
 
     def test_get_supported_intervals(self, service):
-        """Test getting supported intervals"""
+        """Test getting supported intervals (all datasources)"""
         intervals = service.get_supported_intervals()
         assert isinstance(intervals, list)
         assert "1d" in intervals
         assert "1wk" in intervals
         assert "1mo" in intervals
+        # Intraday intervals should be in the superset
+        assert "1m" in intervals
+        assert "5m" in intervals
+        assert "1h" in intervals
+
+    def test_get_supported_intervals_per_datasource(self, service):
+        """Test getting supported intervals for a specific datasource"""
+        yf_intervals = service.get_supported_intervals("yfinance")
+        assert "1m" in yf_intervals
+        assert "5m" in yf_intervals
+        assert "1h" in yf_intervals
+        assert "1d" in yf_intervals
+        assert "1wk" in yf_intervals
+
+        polygon_intervals = service.get_supported_intervals("polygon")
+        assert "1m" in polygon_intervals
+        assert "4h" in polygon_intervals
+        assert "1d" in polygon_intervals
+
+        finnhub_intervals = service.get_supported_intervals("finnhub")
+        assert "1m" in finnhub_intervals
+        assert "1h" in finnhub_intervals
+        assert "4h" not in finnhub_intervals  # Finnhub doesn't support 4h
+
+        # Unknown datasource returns empty list
+        assert service.get_supported_intervals("nonexistent") == []
 
     def test_get_default_dates(self, service):
         """Test getting default dates"""

@@ -29,11 +29,23 @@ class PolygonDataSource:
         """Fetch OHLCV data from Polygon.io"""
 
         interval_map = {
+            "1m": ("minute", 1),
+            "5m": ("minute", 5),
+            "15m": ("minute", 15),
+            "30m": ("minute", 30),
+            "1h": ("hour", 1),
+            "4h": ("hour", 4),
             "1d": ("day", 1),
             "1wk": ("week", 1),
             "1mo": ("month", 1),
         }
-        timespan, multiplier = interval_map.get(interval, ("day", 1))
+        if interval not in interval_map:
+            supported = ", ".join(sorted(interval_map.keys()))
+            raise ValueError(
+                f"Interval '{interval}' not supported for Polygon datasource. "
+                f"Supported intervals: {supported}"
+            )
+        timespan, multiplier = interval_map[interval]
 
         s = pd.to_datetime(start).strftime("%Y-%m-%d")
         e = pd.to_datetime(end).strftime("%Y-%m-%d")

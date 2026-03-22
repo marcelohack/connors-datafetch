@@ -14,11 +14,11 @@ from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 
+import connors_datafetch.datasources.ccxt  # noqa: F401
 import connors_datafetch.datasources.polygon
 
 # Import all datasources to ensure registration
 import connors_datafetch.datasources.yfinance  # noqa: F401
-import connors_datafetch.datasources.ccxt  # noqa: F401
 from connors_datafetch.config.manager import DataFetchConfigManager
 from connors_datafetch.core.registry import registry
 from connors_datafetch.core.timespan import TimespanCalculator
@@ -64,28 +64,28 @@ class DataFetchService(BaseService):
                 "name": "yfinance",
                 "description": "Free financial data from Yahoo Finance",
                 "requires_api_key": False,
-                "supported_intervals": "1d, 1wk, 1mo",
+                "supported_intervals": "1m, 2m, 5m, 15m, 30m, 90m, 1h, 1d, 1wk, 1mo",
                 "global_coverage": True,
             },
             "polygon": {
                 "name": "polygon",
                 "description": "Professional financial data API",
                 "requires_api_key": True,
-                "supported_intervals": "1d, 1wk, 1mo",
+                "supported_intervals": "1m, 5m, 15m, 30m, 1h, 4h, 1d, 1wk, 1mo",
                 "global_coverage": True,
             },
             "finnhub": {
                 "name": "finnhub",
                 "description": "Finnhub Stock API for real-time market data",
                 "requires_api_key": True,
-                "supported_intervals": "1d, 1wk, 1mo",
+                "supported_intervals": "1m, 5m, 15m, 30m, 1h, 1d, 1wk, 1mo",
                 "global_coverage": True,
             },
             "fmp": {
                 "name": "fmp",
                 "description": "FinancialModelingPrep - Financial data API",
                 "requires_api_key": True,
-                "supported_intervals": "1d, 1wk, 1mo",
+                "supported_intervals": "1m, 5m, 15m, 30m, 1h, 4h, 1d, 1wk, 1mo",
                 "global_coverage": True,
             },
             "ccxt": {
@@ -131,9 +131,37 @@ class DataFetchService(BaseService):
             self.logger.error(f"Failed to get market config info: {e}")
             return {}
 
-    def get_supported_intervals(self) -> List[str]:
-        """Get list of supported data intervals"""
-        return ["1d", "1wk", "1mo"]
+    # Per-datasource supported intervals
+    DATASOURCE_INTERVALS: Dict[str, List[str]] = {
+        "yfinance": ["1m", "2m", "5m", "15m", "30m", "90m", "1h", "1d", "1wk", "1mo"],
+        "polygon": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"],
+        "finnhub": ["1m", "5m", "15m", "30m", "1h", "1d", "1wk", "1mo"],
+        "fmp": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"],
+        "ccxt": [
+            "1m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "4h",
+            "6h",
+            "12h",
+            "1d",
+            "1w",
+            "1M",
+        ],
+    }
+
+    def get_supported_intervals(self, datasource: Optional[str] = None) -> List[str]:
+        """Get list of supported data intervals, optionally filtered by datasource"""
+        if datasource:
+            return self.DATASOURCE_INTERVALS.get(datasource, [])
+        # Return union of all intervals (sorted, deduplicated)
+        all_intervals: set[str] = set()
+        for intervals in self.DATASOURCE_INTERVALS.values():
+            all_intervals.update(intervals)
+        return sorted(all_intervals)
 
     def get_available_timeframes(self) -> List[str]:
         """Get list of available predefined timeframes"""
@@ -276,7 +304,15 @@ class DataFetchService(BaseService):
 
             # Generate output path
             output_path = self._get_output_path(
-                ticker, datasource, start, end, interval, market, exchange=None, include_datasource=False, timeframe=timeframe
+                ticker,
+                datasource,
+                start,
+                end,
+                interval,
+                market,
+                exchange=None,
+                include_datasource=False,
+                timeframe=timeframe,
             )
 
             # Validate date range
@@ -307,6 +343,24 @@ class DataFetchService(BaseService):
         except Exception as e:
             return {"valid": False, "error": str(e)}
 
+    @staticmethod
+    def _is_intraday(interval: str) -> bool:
+        """Check if an interval is sub-daily (intraday)"""
+        return interval in {
+            "1m",
+            "2m",
+            "5m",
+            "15m",
+            "30m",
+            "90m",
+            "1h",
+            "2h",
+            "4h",
+            "6h",
+            "8h",
+            "12h",
+        }
+
     def download_data(
         self,
         datasource: str,
@@ -321,6 +375,7 @@ class DataFetchService(BaseService):
         timeframe: Optional[str] = None,
         exchange: Optional[str] = None,
         include_datasource: bool = False,
+        extended_hours: bool = False,
     ) -> DataFetchResult:
         """
         Download financial data and save to specified format
@@ -330,13 +385,15 @@ class DataFetchService(BaseService):
             ticker: Stock ticker symbol
             start: Start date (YYYY-MM-DD) - optional if timeframe provided
             end: End date (YYYY-MM-DD) - optional if timeframe provided
-            interval: Data interval (1d, 1wk, 1mo for stocks; 1m-1M for crypto)
+            interval: Data interval (e.g., 1m, 5m, 15m, 30m, 1h, 1d, 1wk, 1mo)
             market: Optional market configuration
             output_file: Optional custom output file path
             output_format: Output format ('csv' or 'json')
             progress_callback: Optional callback for progress updates
             timeframe: Pre-defined timeframe (e.g., "1Y", "6M", "YTD")
             exchange: Exchange name for ccxt datasource (e.g., "binance", "kraken")
+            include_datasource: Include datasource name in output filename
+            extended_hours: Include pre-market/after-hours data (yfinance only)
 
         Returns:
             DataFetchResult object containing data and metadata
@@ -371,7 +428,7 @@ class DataFetchService(BaseService):
             # Create datasource instance with exchange parameter if provided
             kwargs = {}
             if exchange:
-                kwargs['exchange'] = exchange
+                kwargs["exchange"] = exchange
 
             datasource_instance = self.registry.create_datasource(datasource, **kwargs)
 
@@ -379,9 +436,15 @@ class DataFetchService(BaseService):
                 progress_callback(f"Fetching data for {preview['final_ticker']}...")
 
             # Fetch data
-            df = datasource_instance.fetch(
-                symbol=preview["final_ticker"], start=start, end=end, interval=interval
-            )
+            fetch_kwargs: Dict[str, Any] = {
+                "symbol": preview["final_ticker"],
+                "start": start,
+                "end": end,
+                "interval": interval,
+            }
+            if extended_hours and datasource == "yfinance":
+                fetch_kwargs["extended_hours"] = True
+            df = datasource_instance.fetch(**fetch_kwargs)
 
             if df.empty:
                 raise ValueError(
@@ -397,7 +460,16 @@ class DataFetchService(BaseService):
                 output_path.parent.mkdir(parents=True, exist_ok=True)
             else:
                 output_path = self._get_output_path_with_format(
-                    ticker, datasource, start, end, interval, market, output_format, exchange, include_datasource, timeframe
+                    ticker,
+                    datasource,
+                    start,
+                    end,
+                    interval,
+                    market,
+                    output_format,
+                    exchange,
+                    include_datasource,
+                    timeframe,
                 )
                 self._ensure_directory_exists(output_path.parent)
 
@@ -413,28 +485,30 @@ class DataFetchService(BaseService):
                 df_export.index.name.lower() if df_export.index.name else "date"
             )
 
+            intraday = self._is_intraday(interval)
+
             if output_format.lower() == "csv":
-                # For CSV export, ensure dates are formatted as date strings for daily data
-                if interval == "1d" and isinstance(df_export.index, pd.DatetimeIndex):
+                if isinstance(df_export.index, pd.DatetimeIndex):
                     df_export_csv = df_export.copy()
-                    df_export_csv.index = df_export_csv.index.strftime("%Y-%m-%d")
+                    if intraday:
+                        df_export_csv.index = df_export_csv.index.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                    else:
+                        df_export_csv.index = df_export_csv.index.strftime("%Y-%m-%d")
                     df_export_csv.to_csv(output_path)
                 else:
                     df_export.to_csv(output_path)
             elif output_format.lower() == "json":
                 # Convert to JSON format with proper handling of date and numeric types
-                # Reset index to include it in the JSON output
                 df_export_reset = df_export.reset_index()
 
                 # Custom date serializer to format dates properly
-                def date_serializer(obj):
+                def date_serializer(obj: object) -> str:
                     if isinstance(obj, pd.Timestamp):
-                        # For daily data, return just the date part
-                        if interval == "1d":
-                            return obj.strftime("%Y-%m-%d")
-                        else:
-                            # For weekly/monthly, include time if needed
-                            return obj.strftime("%Y-%m-%d")
+                        if intraday:
+                            return obj.strftime("%Y-%m-%d %H:%M:%S")
+                        return obj.strftime("%Y-%m-%d")
                     return str(obj)
 
                 # Convert to JSON with proper date handling - direct array format
@@ -616,7 +690,16 @@ class DataFetchService(BaseService):
     ) -> Path:
         """Generate output path within app folder downloads/datasets directory (CSV format)"""
         return self._get_output_path_with_format(
-            ticker, datasource, start, end, interval, market, "csv", exchange, include_datasource, timeframe
+            ticker,
+            datasource,
+            start,
+            end,
+            interval,
+            market,
+            "csv",
+            exchange,
+            include_datasource,
+            timeframe,
         )
 
     def _get_output_path_with_format(
@@ -663,7 +746,9 @@ class DataFetchService(BaseService):
             if include_datasource:
                 filename = f"{safe_ticker}_{exchange}_{datasource}_{period_str}_{interval}.{extension}"
             else:
-                filename = f"{safe_ticker}_{exchange}_{period_str}_{interval}.{extension}"
+                filename = (
+                    f"{safe_ticker}_{exchange}_{period_str}_{interval}.{extension}"
+                )
         elif market and market != "america":
             # Stock with non-default market
             if include_datasource:
@@ -673,7 +758,9 @@ class DataFetchService(BaseService):
         else:
             # Stock with default market or no market
             if include_datasource:
-                filename = f"{safe_ticker}_{datasource}_{period_str}_{interval}.{extension}"
+                filename = (
+                    f"{safe_ticker}_{datasource}_{period_str}_{interval}.{extension}"
+                )
             else:
                 filename = f"{safe_ticker}_{period_str}_{interval}.{extension}"
 

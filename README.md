@@ -125,7 +125,9 @@ python -m connors.cli.datafetch --list-markets
 ### Free Data Sources
 
 - **yfinance**: Yahoo Finance (no API key required)
-  - Supported intervals: 1d, 1wk, 1mo
+  - Supported intervals: 1m, 2m, 5m, 15m, 30m, 90m, 1h, 1d, 1wk, 1mo
+  - Intraday limits: 1m (7 days), 5m/15m/30m (60 days), 1h (730 days)
+  - Supports `extended_hours` for pre-market/after-hours data
   - Global coverage for stocks, ETFs, indices
 
 - **ccxt**: Cryptocurrency data from 100+ exchanges (no API key required)
@@ -135,8 +137,11 @@ python -m connors.cli.datafetch --list-markets
 ### API-Based Data Sources (Require API Key)
 
 - **polygon**: Polygon.io professional market data
+  - Supported intervals: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1wk, 1mo
 - **finnhub**: Finnhub real-time stock market data
+  - Supported intervals: 1m, 5m, 15m, 30m, 1h, 1d, 1wk, 1mo
 - **fmp**: Financial Modeling Prep data
+  - Supported intervals: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1wk, 1mo
 
 ## Available Markets
 

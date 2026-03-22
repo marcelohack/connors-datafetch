@@ -28,8 +28,18 @@ class FinancialModelingPrepDataSource:
     ) -> pd.DataFrame:
         """Fetch OHLCV data from FinancialModelingPrep"""
 
-        # FMP v3 API supports daily data through historical-price-full endpoint
-        # For weekly/monthly, we use the historical-chart endpoint
+        # FMP interval mapping to API timeseries values
+        interval_map = {
+            "1m": "1min",
+            "5m": "5min",
+            "15m": "15min",
+            "30m": "30min",
+            "1h": "1hour",
+            "4h": "4hour",
+            "1wk": "1week",
+            "1mo": "1month",
+        }
+
         if interval == "1d":
             # Use historical-price-full endpoint for daily data
             url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{symbol}"
@@ -38,12 +48,8 @@ class FinancialModelingPrepDataSource:
                 "to": pd.to_datetime(end).strftime("%Y-%m-%d"),
                 "apikey": self.api_key,
             }
-        elif interval in ["1wk", "1mo"]:
-            # Use historical-chart endpoint for weekly/monthly data
-            interval_map = {
-                "1wk": "1week",
-                "1mo": "1month",
-            }
+        elif interval in interval_map:
+            # Use historical-chart endpoint for intraday/weekly/monthly data
             timeseries = interval_map[interval]
             url = f"https://financialmodelingprep.com/api/v3/historical-chart/{timeseries}/{symbol}"
             params = {
@@ -52,8 +58,10 @@ class FinancialModelingPrepDataSource:
                 "apikey": self.api_key,
             }
         else:
+            supported = ", ".join(sorted(["1d"] + list(interval_map.keys())))
             raise ValueError(
-                f"Unsupported interval: {interval}. Use '1d', '1wk', or '1mo'."
+                f"Interval '{interval}' not supported for FMP datasource. "
+                f"Supported intervals: {supported}"
             )
 
         response = self.session.get(url, params=params, timeout=20)

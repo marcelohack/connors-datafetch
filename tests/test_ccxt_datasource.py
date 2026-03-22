@@ -49,17 +49,16 @@ class TestCCXTDataSource:
             mock_exchange.return_value = mock_instance
 
             ds = CCXTDataSource(
-                exchange="binance",
-                api_key="test_api_key",
-                secret="test_secret"
+                exchange="binance", api_key="test_api_key", secret="test_secret"
             )
 
-            mock_exchange.assert_called_once_with({
-                "apiKey": "test_api_key",
-                "secret": "test_secret"
-            })
+            mock_exchange.assert_called_once_with(
+                {"apiKey": "test_api_key", "secret": "test_secret"}
+            )
 
-    @patch.dict("os.environ", {"CCXT_API_KEY": "env_api_key", "CCXT_SECRET": "env_secret"})
+    @patch.dict(
+        "os.environ", {"CCXT_API_KEY": "env_api_key", "CCXT_SECRET": "env_secret"}
+    )
     def test_init_with_env_credentials(self) -> None:
         """Test initialization with credentials from environment"""
         with patch("ccxt.binance") as mock_exchange:
@@ -68,10 +67,9 @@ class TestCCXTDataSource:
 
             ds = CCXTDataSource(exchange="binance")
 
-            mock_exchange.assert_called_once_with({
-                "apiKey": "env_api_key",
-                "secret": "env_secret"
-            })
+            mock_exchange.assert_called_once_with(
+                {"apiKey": "env_api_key", "secret": "env_secret"}
+            )
 
     def test_fetch_ohlcv_success(self) -> None:
         """Test successful OHLCV data fetch"""
@@ -82,9 +80,30 @@ class TestCCXTDataSource:
 
             # Mock OHLCV data (timestamp, open, high, low, close, volume)
             mock_ohlcv = [
-                [1704067200000, 42000.0, 42500.0, 41800.0, 42300.0, 100.5],  # 2024-01-01 00:00
-                [1704153600000, 42300.0, 42800.0, 42100.0, 42600.0, 95.3],   # 2024-01-02 00:00
-                [1704240000000, 42600.0, 43000.0, 42400.0, 42800.0, 110.2],  # 2024-01-03 00:00
+                [
+                    1704067200000,
+                    42000.0,
+                    42500.0,
+                    41800.0,
+                    42300.0,
+                    100.5,
+                ],  # 2024-01-01 00:00
+                [
+                    1704153600000,
+                    42300.0,
+                    42800.0,
+                    42100.0,
+                    42600.0,
+                    95.3,
+                ],  # 2024-01-02 00:00
+                [
+                    1704240000000,
+                    42600.0,
+                    43000.0,
+                    42400.0,
+                    42800.0,
+                    110.2,
+                ],  # 2024-01-03 00:00
             ]
             mock_exchange.fetch_ohlcv.return_value = mock_ohlcv
             mock_exchange.timeframes = {"1d": "1d"}
@@ -162,7 +181,10 @@ class TestCCXTDataSource:
 
             # Import ccxt to access exceptions
             import ccxt as ccxt_module
-            mock_exchange.fetch_ohlcv.side_effect = ccxt_module.NetworkError("Connection failed")
+
+            mock_exchange.fetch_ohlcv.side_effect = ccxt_module.NetworkError(
+                "Connection failed"
+            )
 
             ds = CCXTDataSource(exchange="binance")
 
@@ -178,7 +200,10 @@ class TestCCXTDataSource:
 
             # Import ccxt to access exceptions
             import ccxt as ccxt_module
-            mock_exchange.fetch_ohlcv.side_effect = ccxt_module.ExchangeError("Invalid symbol")
+
+            mock_exchange.fetch_ohlcv.side_effect = ccxt_module.ExchangeError(
+                "Invalid symbol"
+            )
 
             ds = CCXTDataSource(exchange="binance")
 
@@ -193,10 +218,31 @@ class TestCCXTDataSource:
 
             # Mock data with dates outside range
             mock_ohlcv = [
-                [1703980800000, 41000.0, 41500.0, 40800.0, 41300.0, 100.0],  # 2023-12-31
-                [1704067200000, 42000.0, 42500.0, 41800.0, 42300.0, 100.5],  # 2024-01-01
-                [1704153600000, 42300.0, 42800.0, 42100.0, 42600.0, 95.3],   # 2024-01-02
-                [1704240000000, 42600.0, 43000.0, 42400.0, 42800.0, 110.2],  # 2024-01-03
+                [
+                    1703980800000,
+                    41000.0,
+                    41500.0,
+                    40800.0,
+                    41300.0,
+                    100.0,
+                ],  # 2023-12-31
+                [
+                    1704067200000,
+                    42000.0,
+                    42500.0,
+                    41800.0,
+                    42300.0,
+                    100.5,
+                ],  # 2024-01-01
+                [1704153600000, 42300.0, 42800.0, 42100.0, 42600.0, 95.3],  # 2024-01-02
+                [
+                    1704240000000,
+                    42600.0,
+                    43000.0,
+                    42400.0,
+                    42800.0,
+                    110.2,
+                ],  # 2024-01-03
             ]
             mock_exchange.fetch_ohlcv.return_value = mock_ohlcv
             mock_exchange.timeframes = {"1d": "1d"}
@@ -245,11 +291,7 @@ class TestCCXTDataSource:
         with patch("ccxt.binance") as mock_exchange_class:
             mock_exchange = MagicMock()
             mock_exchange_class.return_value = mock_exchange
-            mock_exchange.markets = {
-                "BTC/USDT": {},
-                "ETH/USDT": {},
-                "BNB/USDT": {}
-            }
+            mock_exchange.markets = {"BTC/USDT": {}, "ETH/USDT": {}, "BNB/USDT": {}}
 
             ds = CCXTDataSource(exchange="binance")
             symbols = ds.get_supported_symbols()
@@ -264,12 +306,7 @@ class TestCCXTDataSource:
         with patch("ccxt.binance") as mock_exchange_class:
             mock_exchange = MagicMock()
             mock_exchange_class.return_value = mock_exchange
-            mock_exchange.timeframes = {
-                "1m": "1m",
-                "5m": "5m",
-                "1h": "1h",
-                "1d": "1d"
-            }
+            mock_exchange.timeframes = {"1m": "1m", "5m": "5m", "1h": "1h", "1d": "1d"}
 
             ds = CCXTDataSource(exchange="binance")
             timeframes = ds.get_supported_timeframes()
@@ -324,9 +361,23 @@ class TestCCXTDataSource:
 
             # Mock unsorted data
             mock_ohlcv = [
-                [1704153600000, 42300.0, 42800.0, 42100.0, 42600.0, 95.3],   # 2024-01-02
-                [1704067200000, 42000.0, 42500.0, 41800.0, 42300.0, 100.5],  # 2024-01-01
-                [1704240000000, 42600.0, 43000.0, 42400.0, 42800.0, 110.2],  # 2024-01-03
+                [1704153600000, 42300.0, 42800.0, 42100.0, 42600.0, 95.3],  # 2024-01-02
+                [
+                    1704067200000,
+                    42000.0,
+                    42500.0,
+                    41800.0,
+                    42300.0,
+                    100.5,
+                ],  # 2024-01-01
+                [
+                    1704240000000,
+                    42600.0,
+                    43000.0,
+                    42400.0,
+                    42800.0,
+                    110.2,
+                ],  # 2024-01-03
             ]
             mock_exchange.fetch_ohlcv.return_value = mock_ohlcv
             mock_exchange.timeframes = {"1d": "1d"}
