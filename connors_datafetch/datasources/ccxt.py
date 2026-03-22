@@ -9,6 +9,7 @@ Supported exchanges: Binance, Kraken, Coinbase, and many more.
 
 import os
 from typing import Optional
+
 import pandas as pd
 
 try:
@@ -247,7 +248,9 @@ class CCXTDataSource:
 
         # Filter to exact date range (inclusive)
         # Convert to timezone-aware for comparison
-        start_dt_utc = start_dt.tz_localize("UTC") if start_dt.tzinfo is None else start_dt
+        start_dt_utc = (
+            start_dt.tz_localize("UTC") if start_dt.tzinfo is None else start_dt
+        )
         end_dt_utc = end_dt.tz_localize("UTC") if end_dt.tzinfo is None else end_dt
 
         df = df[(df.index >= start_dt_utc) & (df.index <= end_dt_utc)]

@@ -30,11 +30,22 @@ class FinnhubDataSource:
 
         # Finnhub uses different interval formats
         interval_map = {
+            "1m": "1",
+            "5m": "5",
+            "15m": "15",
+            "30m": "30",
+            "1h": "60",
             "1d": "D",
             "1wk": "W",
             "1mo": "M",
         }
-        resolution = interval_map.get(interval, "D")
+        if interval not in interval_map:
+            supported = ", ".join(sorted(interval_map.keys()))
+            raise ValueError(
+                f"Interval '{interval}' not supported for Finnhub datasource. "
+                f"Supported intervals: {supported}"
+            )
+        resolution = interval_map[interval]
 
         # Convert dates to Unix timestamps
         start_ts = int(pd.to_datetime(start).timestamp())

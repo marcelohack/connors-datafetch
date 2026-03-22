@@ -43,26 +43,72 @@ class TestYfinanceDataSource:
             start="2023-01-01",
             end="2023-01-02",
             interval="1d",
+            prepost=False,
             progress=False,
             multi_level_index=False,
         )
 
     @patch("yfinance.download")
     def test_fetch_data_with_interval(self, mock_download: Mock) -> None:
-        """Test data fetch with custom interval"""
+        """Test data fetch with custom intraday interval"""
         mock_data = pd.DataFrame({"Close": [100.0]})
         mock_download.return_value = mock_data
 
-        self.yf_source.fetch("AAPL", "2023-01-01", "2023-01-02", "1h")
+        self.yf_source.fetch("AAPL", "2024-01-01", "2024-01-02", "1h")
 
         mock_download.assert_called_once_with(
             tickers="AAPL",
-            start="2023-01-01",
-            end="2023-01-02",
+            start="2024-01-01",
+            end="2024-01-02",
             interval="1h",
+            prepost=False,
             progress=False,
             multi_level_index=False,
         )
+
+    @patch("yfinance.download")
+    def test_fetch_data_with_extended_hours(self, mock_download: Mock) -> None:
+        """Test data fetch with extended hours enabled"""
+        mock_data = pd.DataFrame({"Close": [100.0]})
+        mock_download.return_value = mock_data
+
+        self.yf_source.fetch(
+            "AAPL", "2024-01-01", "2024-01-02", "5m", extended_hours=True
+        )
+
+        mock_download.assert_called_once_with(
+            tickers="AAPL",
+            start="2024-01-01",
+            end="2024-01-02",
+            interval="5m",
+            prepost=True,
+            progress=False,
+            multi_level_index=False,
+        )
+
+    def test_fetch_unsupported_interval(self) -> None:
+        """Test that unsupported interval raises ValueError"""
+        with pytest.raises(ValueError, match="not supported for yfinance"):
+            self.yf_source.fetch("AAPL", "2024-01-01", "2024-01-02", "3m")
+
+    def test_fetch_1m_exceeds_lookback(self) -> None:
+        """Test that 1m interval with >7 day range raises ValueError"""
+        with pytest.raises(ValueError, match="maximum lookback of 7 days"):
+            self.yf_source.fetch("AAPL", "2024-01-01", "2024-01-15", "1m")
+
+    def test_fetch_5m_exceeds_lookback(self) -> None:
+        """Test that 5m interval with >60 day range raises ValueError"""
+        with pytest.raises(ValueError, match="maximum lookback of 60 days"):
+            self.yf_source.fetch("AAPL", "2024-01-01", "2024-06-01", "5m")
+
+    @patch("yfinance.download")
+    def test_fetch_1m_within_lookback(self, mock_download: Mock) -> None:
+        """Test that 1m interval within 7 day range succeeds"""
+        mock_data = pd.DataFrame({"Close": [100.0]})
+        mock_download.return_value = mock_data
+
+        self.yf_source.fetch("AAPL", "2024-01-01", "2024-01-05", "1m")
+        mock_download.assert_called_once()
 
 
 class TestPolygonDataSource:
@@ -199,6 +245,45 @@ class TestPolygonDataSource:
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 1
 
+    @patch("requests.Session.get")
+    def test_fetch_intraday_intervals(self, mock_get: Mock) -> None:
+        """Test data fetch with intraday intervals"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "resultsCount": 1,
+            "results": [
+                {
+                    "t": 1640995200000,
+                    "o": 100.0,
+                    "h": 102.0,
+                    "l": 99.0,
+                    "c": 101.0,
+                    "v": 1000,
+                }
+            ],
+        }
+        mock_get.return_value = mock_response
+
+        polygon_source = PolygonDataSource(api_key="test_key")
+
+        # Test 5m interval
+        result = polygon_source.fetch("AAPL", "2024-01-01", "2024-01-02", "5m")
+        assert isinstance(result, pd.DataFrame)
+        call_args = mock_get.call_args
+        assert "/range/5/minute/" in call_args[0][0]
+
+        # Test 1h interval
+        result = polygon_source.fetch("AAPL", "2024-01-01", "2024-01-02", "1h")
+        call_args = mock_get.call_args
+        assert "/range/1/hour/" in call_args[0][0]
+
+    def test_fetch_unsupported_interval(self) -> None:
+        """Test that unsupported interval raises ValueError"""
+        polygon_source = PolygonDataSource(api_key="test_key")
+        with pytest.raises(ValueError, match="not supported for Polygon"):
+            polygon_source.fetch("AAPL", "2024-01-01", "2024-01-02", "3m")
+
 
 class TestFinnhubDataSource:
     """Test Finnhub data source"""
@@ -318,6 +403,40 @@ class TestFinnhubDataSource:
         result = finnhub_source.fetch("AAPL", "2023-01-01", "2023-01-02", "1mo")
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 1
+
+    @patch("requests.Session.get")
+    def test_fetch_intraday_intervals(self, mock_get: Mock) -> None:
+        """Test data fetch with intraday intervals"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "s": "ok",
+            "t": [1640995200],
+            "o": [100.0],
+            "h": [102.0],
+            "l": [99.0],
+            "c": [101.0],
+            "v": [1000],
+        }
+        mock_get.return_value = mock_response
+
+        finnhub_source = FinnhubDataSource(api_key="test_key")
+
+        # Test 5m interval maps to resolution "5"
+        finnhub_source.fetch("AAPL", "2024-01-01", "2024-01-02", "5m")
+        call_args = mock_get.call_args
+        assert call_args[1]["params"]["resolution"] == "5"
+
+        # Test 1h interval maps to resolution "60"
+        finnhub_source.fetch("AAPL", "2024-01-01", "2024-01-02", "1h")
+        call_args = mock_get.call_args
+        assert call_args[1]["params"]["resolution"] == "60"
+
+    def test_fetch_unsupported_interval(self) -> None:
+        """Test that unsupported interval raises ValueError"""
+        finnhub_source = FinnhubDataSource(api_key="test_key")
+        with pytest.raises(ValueError, match="not supported for Finnhub"):
+            finnhub_source.fetch("AAPL", "2024-01-01", "2024-01-02", "3m")
 
 
 class TestFMPDataSource:
@@ -509,5 +628,32 @@ class TestFMPDataSource:
         """Test fetch with unsupported interval raises ValueError"""
         fmp_source = FinancialModelingPrepDataSource(api_key="test_key")
 
-        with pytest.raises(ValueError, match="Unsupported interval: 5m"):
-            fmp_source.fetch("AAPL", "2023-01-01", "2023-01-02", "5m")
+        with pytest.raises(ValueError, match="not supported for FMP"):
+            fmp_source.fetch("AAPL", "2023-01-01", "2023-01-02", "3m")
+
+    @patch("requests.Session.get")
+    def test_fetch_intraday_data(self, mock_get: Mock) -> None:
+        """Test fetch with intraday intervals uses historical-chart endpoint"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "date": "2024-01-02 09:30:00",
+                "open": 100.0,
+                "high": 102.0,
+                "low": 99.0,
+                "close": 101.0,
+                "volume": 1000,
+            }
+        ]
+        mock_get.return_value = mock_response
+
+        fmp_source = FinancialModelingPrepDataSource(api_key="test_key")
+        result = fmp_source.fetch("AAPL", "2024-01-01", "2024-01-02", "5m")
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 1
+
+        # Verify correct endpoint for intraday data
+        call_args = mock_get.call_args
+        assert "historical-chart/5min/AAPL" in call_args[0][0]

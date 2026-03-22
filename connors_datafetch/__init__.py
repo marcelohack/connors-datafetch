@@ -7,14 +7,17 @@ including stocks, forex, and cryptocurrency markets.
 
 __version__ = "0.1.0"
 
+# Import config
+from connors_datafetch.config.manager import DataFetchConfig, DataFetchConfigManager
+
 # Import registry to make it available at package level
 from connors_datafetch.core.registry import registry
 
 # Import services
-from connors_datafetch.services.datafetch_service import DataFetchResult, DataFetchService
-
-# Import config
-from connors_datafetch.config.manager import DataFetchConfig, DataFetchConfigManager
+from connors_datafetch.services.datafetch_service import (
+    DataFetchResult,
+    DataFetchService,
+)
 
 __all__ = [
     "registry",
