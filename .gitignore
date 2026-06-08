@@ -138,7 +138,6 @@ Thumbs.db
 
 # uv
 .uv/
-uv.lock
 
 # Downloaded data (from this project)
 # Uncomment if you don't want to track downloaded datasets locally
