@@ -4,7 +4,7 @@
 
 ## Overview
 
-Financial data downloader with support for multiple data sources including stocks, forex, and cryptocurrency markets. Provides both a standalone CLI (`connors-datafetch`) and integration with the [connors-playground](https://github.com/marcelohack/connors-playground) Streamlit UI.
+Financial data downloader with support for multiple data sources including stocks, forex, and cryptocurrency markets. Provides a standalone CLI (`connors-datafetch`) and a programmatic API used across the Connors packages.
 
 ## Features
 
@@ -171,7 +171,7 @@ uv run pytest --cov=connors_datafetch
 
 | Package | Description | Links |
 |---------|-------------|-------|
-| [connors-playground](https://github.com/marcelohack/connors-playground) | CLI + Streamlit UI (integration hub) | [README](https://github.com/marcelohack/connors-playground#readme) |
+| [connors-playground](https://github.com/marcelohack/connors-playground) | Workspace hub + API token manager | [README](https://github.com/marcelohack/connors-playground#readme) |
 | [connors-core](https://github.com/marcelohack/connors-core) | Registry, config, indicators, metrics | [README](https://github.com/marcelohack/connors-core#readme) |
 | [connors-backtest](https://github.com/marcelohack/connors-backtest) | Backtesting service + built-in strategies | [README](https://github.com/marcelohack/connors-backtest#readme) |
 | [connors-strategies](https://github.com/marcelohack/connors-strategies) | Trading strategy collection (private) | — |

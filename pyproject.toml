@@ -47,8 +47,6 @@ dependencies = [
     # CLI interface
     "click>=8.1.0",
     "rich>=13.0.0",
-    # Web interface component
-    "streamlit>=1.28.0",
 ]
 
 [project.scripts]
@@ -114,7 +112,6 @@ show_error_codes = true
 module = [
     "yfinance.*",
     "ccxt.*",
-    "streamlit.*",
 ]
 ignore_missing_imports = true
 
