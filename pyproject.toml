@@ -51,6 +51,9 @@ dependencies = [
     "streamlit>=1.28.0",
 ]
 
+[project.scripts]
+connors-datafetch = "connors_datafetch.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",

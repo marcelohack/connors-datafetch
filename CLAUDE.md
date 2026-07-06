@@ -50,7 +50,7 @@ flake8 connors_datafetch
 connors-datafetch --datasource yfinance --ticker AAPL --timespan 1Y
 
 # Run directly from source
-python -m connors_datafetch.cli.downloader --datasource yfinance --ticker AAPL
+python -m connors_datafetch.cli --datasource yfinance --ticker AAPL
 ```
 
 ## Architecture

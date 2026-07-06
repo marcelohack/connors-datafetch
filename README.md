@@ -4,7 +4,7 @@
 
 ## Overview
 
-Financial data downloader with support for multiple data sources including stocks, forex, and cryptocurrency markets. Provides both a standalone CLI (`connors-datafetch`) and integration with the playground CLI.
+Financial data downloader with support for multiple data sources including stocks, forex, and cryptocurrency markets. Provides both a standalone CLI (`connors-datafetch`) and integration with the [connors-playground](https://github.com/marcelohack/connors-playground) Streamlit UI.
 
 ## Features
 
@@ -88,30 +88,20 @@ connors-datafetch --datasource yfinance --ticker BHP \
 # Cryptocurrency from Binance
 connors-datafetch --datasource ccxt --exchange binance \
     --ticker BTC/USDT --interval 1h --timespan 1M
-```
-
-## CLI Usage
-
-The data downloading CLI is also available via [connors-playground](https://github.com/marcelohack/connors-playground):
-
-```bash
-# Download stock data
-python -m connors.cli.datafetch --datasource yfinance --ticker AAPL --timespan 6M
 
 # Download year-to-date data
-python -m connors.cli.datafetch --datasource yfinance --ticker MSFT --timespan YTD
-
-# Australian market with suffix
-python -m connors.cli.datafetch --datasource yfinance --ticker BHP --market australia --timespan 2Y
+connors-datafetch --datasource yfinance --ticker MSFT --timespan YTD
 
 # Different data sources
-python -m connors.cli.datafetch --datasource polygon --ticker TSLA --start 2023-06-01 --end 2023-06-30
-python -m connors.cli.datafetch --datasource fmp --ticker AAPL --timespan 3M
+connors-datafetch --datasource polygon --ticker TSLA --start 2023-06-01 --end 2023-06-30
+connors-datafetch --datasource fmp --ticker AAPL --timespan 3M
 
 # List available options
-python -m connors.cli.datafetch --list-datasources
-python -m connors.cli.datafetch --list-markets
+connors-datafetch --list-datasources
+connors-datafetch --list-markets
 ```
+
+The `connors-datafetch` command is installed with the package (`connors_datafetch/cli.py`; also runnable as `python -m connors_datafetch.cli`).
 
 ## Available Data Sources
 
