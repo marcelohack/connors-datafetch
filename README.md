@@ -114,6 +114,7 @@ The `connors-datafetch` command is installed with the package (`connors_datafetc
   - Intraday limits: 1m (7 days), 5m/15m/30m (60 days), 1h (730 days)
   - Supports `extended_hours` for pre-market/after-hours data
   - Global coverage for stocks, ETFs, indices
+  - Indices accept Yahoo's caret prefix (`^GSPC`, `^VIX`) or EODHD-style symbols (`GSPC.INDX`, `VIX.INDX` — converted to the caret form internally); output filenames always use the EODHD-style symbol (`GSPC.INDX_...`) so index files match across datasources
 
 - **ccxt**: Cryptocurrency data from 100+ exchanges (no API key required)
   - Supported intervals: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 1d, 1w, 1M

@@ -87,6 +87,24 @@ class TestYfinanceDataSource:
             multi_level_index=False,
         )
 
+    @patch("yfinance.download")
+    def test_fetch_indx_symbol_converted_to_caret(self, mock_download: Mock) -> None:
+        """Test that EODHD-style index symbols are converted to Yahoo caret format"""
+        mock_data = pd.DataFrame({"Close": [100.0]})
+        mock_download.return_value = mock_data
+
+        self.yf_source.fetch("GSPC.INDX", "2024-01-01", "2024-01-02")
+
+        mock_download.assert_called_once_with(
+            tickers="^GSPC",
+            start="2024-01-01",
+            end="2024-01-02",
+            interval="1d",
+            prepost=False,
+            progress=False,
+            multi_level_index=False,
+        )
+
     def test_fetch_unsupported_interval(self) -> None:
         """Test that unsupported interval raises ValueError"""
         with pytest.raises(ValueError, match="not supported for yfinance"):

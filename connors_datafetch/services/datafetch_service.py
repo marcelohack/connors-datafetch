@@ -229,15 +229,22 @@ class DataFetchService(BaseService):
         Accepts:
         - Stock tickers: AAPL, MSFT.AX, BHP-AU (alphanumeric with . and -)
         - Crypto pairs: BTC/USDT, ETH/USD (alphanumeric with /)
+        - Index symbols: ^GSPC, ^VIX (Yahoo-style caret prefix), GSPC.INDX
 
         Returns dict with validation results
         """
         if not ticker:
             return {"valid": False, "error": "Ticker cannot be empty"}
 
-        # Allow alphanumeric plus common separators: . - /
+        # Allow alphanumeric plus common separators: . - / ^
         # Remove these characters and check if remaining is alphanumeric
-        if not ticker.replace(".", "").replace("-", "").replace("/", "").isalnum():
+        if (
+            not ticker.replace(".", "")
+            .replace("-", "")
+            .replace("/", "")
+            .replace("^", "")
+            .isalnum()
+        ):
             return {"valid": False, "error": "Ticker contains invalid characters"}
 
         # Relax length check for crypto pairs (e.g., BTC/USDT is 8 chars)
@@ -728,6 +735,11 @@ class DataFetchService(BaseService):
         app_home = self._get_app_home()
         datasets_dir = app_home / "downloads" / "datasets"
         self._ensure_directory_exists(datasets_dir)
+
+        # Normalize Yahoo-style index tickers to EODHD-style symbols
+        # (^GSPC -> GSPC.INDX) so filenames match across datasources
+        if ticker.startswith("^"):
+            ticker = f"{ticker[1:]}.INDX"
 
         # Clean ticker symbol (remove any path-unsafe characters)
         safe_ticker = ticker.replace("/", "-").replace("\\", "-").replace(":", "-")

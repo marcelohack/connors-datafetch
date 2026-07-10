@@ -93,6 +93,7 @@ Each datasource is a separate module in `datasources/` that registers itself:
 - Free Yahoo Finance data, no API key required
 - Supports: stocks, ETFs, indices globally
 - Intervals: 1d, 1wk, 1mo
+- Indices accept `^GSPC` (Yahoo) or `GSPC.INDX` (EODHD-style, converted to caret internally); filenames always use the `.INDX` form
 
 **ccxt** (`datasources/ccxt.py`)
 - Cryptocurrency data from 100+ exchanges

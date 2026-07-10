@@ -216,7 +216,7 @@ class TestDataFetchService:
 
     def test_validate_ticker_valid(self, service):
         """Test ticker validation with valid tickers"""
-        test_cases = ["AAPL", "BHP.AX", "MSFT", "TSLA", "SPY"]
+        test_cases = ["AAPL", "BHP.AX", "MSFT", "TSLA", "SPY", "^GSPC", "GSPC.INDX"]
 
         for ticker in test_cases:
             result = service.validate_ticker(ticker)
@@ -659,6 +659,21 @@ class TestDataFetchService:
             )
             expected = Path(
                 "/home/downloads/datasets/BRK-A_2024-01-01_2024-12-31_1d.csv"
+            )
+            assert path == expected
+
+    def test_get_output_path_index_ticker(self, service):
+        """Test output path normalizes caret index tickers to EODHD-style symbols"""
+        with (
+            patch.object(service, "_get_app_home", return_value=Path("/home")),
+            patch.object(service, "_ensure_directory_exists"),
+        ):
+
+            path = service._get_output_path(
+                "^GSPC", "yfinance", "2024-01-01", "2024-12-31", "1d"
+            )
+            expected = Path(
+                "/home/downloads/datasets/GSPC.INDX_2024-01-01_2024-12-31_1d.csv"
             )
             assert path == expected
 
