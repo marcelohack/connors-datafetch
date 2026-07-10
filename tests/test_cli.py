@@ -8,9 +8,8 @@ Tests the CLI interface for data downloading, including:
 - ccxt exchange requirement
 """
 
-from unittest.mock import Mock, patch
-
 import argparse
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest

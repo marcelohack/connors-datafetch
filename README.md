@@ -8,7 +8,7 @@ Financial data downloader with support for multiple data sources including stock
 
 ## Features
 
-- **Multiple Data Sources**: yfinance, Polygon.io, Finnhub, FMP, and CCXT (100+ crypto exchanges)
+- **Multiple Data Sources**: yfinance, Polygon.io, Finnhub, FMP, EODHD, and CCXT (100+ crypto exchanges)
 - **Flexible Date Ranges**: Use predefined timespans (1Y, 6M, YTD) or custom date ranges
 - **Multiple Markets**: Support for global markets (US, Australia, Brazil, Canada, UK, Germany, Japan, Hong Kong, India)
 - **Multiple Formats**: Export to CSV or JSON
@@ -43,6 +43,7 @@ For API-based datasources, you'll need API keys:
 - Polygon.io: Set `POLYGON_API_KEY` environment variable
 - Finnhub: Set `FINNHUB_API_KEY` environment variable
 - FMP: Set `FMP_API_KEY` environment variable
+- EODHD: Set `EODHD_API_KEY` environment variable
 
 ## Quick Start
 
@@ -95,6 +96,7 @@ connors-datafetch --datasource yfinance --ticker MSFT --timespan YTD
 # Different data sources
 connors-datafetch --datasource polygon --ticker TSLA --start 2023-06-01 --end 2023-06-30
 connors-datafetch --datasource fmp --ticker AAPL --timespan 3M
+connors-datafetch --datasource eodhd --ticker AAPL --timespan 1Y
 
 # List available options
 connors-datafetch --list-datasources
@@ -125,6 +127,30 @@ The `connors-datafetch` command is installed with the package (`connors_datafetc
   - Supported intervals: 1m, 5m, 15m, 30m, 1h, 1d, 1wk, 1mo
 - **fmp**: Financial Modeling Prep data
   - Supported intervals: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1wk, 1mo
+- **eodhd**: EODHD end-of-day and intraday market data
+  - Supported intervals: 1m, 5m, 1h, 1d, 1wk, 1mo
+  - Symbols use EODHD exchange suffixes (e.g. `AAPL.US`, `BHP.AU`); bare tickers default to `.US`
+  - Intraday range limits: 1m (120 days), 5m (600 days), 1h (7200 days)
+  - Indices are available via the `INDX` virtual exchange (Yahoo-style codes without the caret):
+
+    | Index | EODHD symbol |
+    |-------|--------------|
+    | S&P 500 | `GSPC.INDX` |
+    | Dow Jones Industrial | `DJI.INDX` |
+    | NASDAQ Composite | `IXIC.INDX` |
+    | NASDAQ 100 | `NDX.INDX` |
+    | CBOE VIX | `VIX.INDX` |
+    | S&P/ASX 200 | `AXJO.INDX` |
+    | ASX All Ordinaries | `AORD.INDX` |
+    | Bovespa (IBOVESPA) | `BVSP.INDX` |
+    | FTSE 100 | `FTSE.INDX` |
+    | DAX | `GDAXI.INDX` |
+    | Nikkei 225 | `N225.INDX` |
+
+    Example: `connors-datafetch --datasource eodhd --ticker GSPC.INDX --timespan 1Y`
+
+    List all available indices: `curl "https://eodhd.com/api/exchange-symbol-list/INDX?api_token=$EODHD_API_KEY&fmt=json"`.
+    Note: EOD index data is broadly included in paid plans, but intraday coverage for indices is more limited than for stocks.
 
 ## Available Markets
 

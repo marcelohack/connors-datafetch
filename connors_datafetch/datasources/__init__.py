@@ -5,6 +5,7 @@ This module provides data source implementations following PEP 423 conventions
 with a flat structure for better maintainability and imports.
 """
 
+from connors_datafetch.datasources.eodhd import EodhdDataSource
 from connors_datafetch.datasources.finnhub import FinnhubDataSource
 from connors_datafetch.datasources.fmp import FinancialModelingPrepDataSource
 from connors_datafetch.datasources.polygon import PolygonDataSource
@@ -15,4 +16,5 @@ __all__ = [
     "PolygonDataSource",
     "FinnhubDataSource",
     "FinancialModelingPrepDataSource",
+    "EodhdDataSource",
 ]
