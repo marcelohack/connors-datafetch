@@ -118,7 +118,21 @@ Available timespans: {', '.join(datafetch_service.get_available_timeframes())}
     parser.add_argument(
         "--interval",
         default="1d",
-        choices=["1m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "12h", "1d", "1wk", "1mo", "1M"],
+        choices=[
+            "1m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "4h",
+            "6h",
+            "12h",
+            "1d",
+            "1wk",
+            "1mo",
+            "1M",
+        ],
         help="Data interval. Crypto supports: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 1d, 1w, 1M. Stocks support: 1d, 1wk, 1mo. Default: 1d",
     )
 

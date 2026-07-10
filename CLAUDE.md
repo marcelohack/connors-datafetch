@@ -101,6 +101,12 @@ Each datasource is a separate module in `datasources/` that registers itself:
 - No API key needed for public OHLCV data
 - Automatic pagination for large date ranges
 
+**eodhd** (`datasources/eodhd.py`)
+- EODHD (eodhd.com) end-of-day and intraday data, requires `EODHD_API_KEY`
+- Symbols use EODHD exchange suffixes (e.g. `AAPL.US`); bare tickers default to `.US`
+- Intervals: 1m, 5m, 1h (intraday endpoint), 1d, 1wk, 1mo (EOD endpoint)
+- Indices use the `INDX` virtual exchange (Yahoo-style codes without the caret): `GSPC.INDX` (S&P 500), `DJI.INDX` (Dow Jones), `IXIC.INDX` (NASDAQ Composite), `NDX.INDX` (NASDAQ 100), `VIX.INDX` (CBOE VIX), `AXJO.INDX` (ASX 200), `AORD.INDX` (ASX All Ordinaries), `BVSP.INDX` (Bovespa/IBOVESPA), `FTSE.INDX` (FTSE 100), `GDAXI.INDX` (DAX), `N225.INDX` (Nikkei 225)
+
 **polygon, finnhub, fmp** (API-based, require keys)
 - Set via environment variables: `POLYGON_API_KEY`, `FINNHUB_API_KEY`, `FMP_API_KEY`
 
@@ -163,6 +169,7 @@ Examples:
 - `POLYGON_API_KEY`: Polygon.io API key
 - `FINNHUB_API_KEY`: Finnhub API key
 - `FMP_API_KEY`: Financial Modeling Prep API key
+- `EODHD_API_KEY`: EODHD API key
 - `CCXT_API_KEY`: CCXT API key (optional, for private endpoints)
 - `CCXT_SECRET`: CCXT secret (optional, for private endpoints)
 

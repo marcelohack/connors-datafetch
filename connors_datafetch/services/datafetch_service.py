@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, List, Optional
 import pandas as pd
 
 import connors_datafetch.datasources.ccxt  # noqa: F401
+import connors_datafetch.datasources.eodhd  # noqa: F401
 import connors_datafetch.datasources.polygon
 
 # Import all datasources to ensure registration
@@ -88,6 +89,13 @@ class DataFetchService(BaseService):
                 "supported_intervals": "1m, 5m, 15m, 30m, 1h, 4h, 1d, 1wk, 1mo",
                 "global_coverage": True,
             },
+            "eodhd": {
+                "name": "eodhd",
+                "description": "EODHD - End-of-day and intraday market data API",
+                "requires_api_key": True,
+                "supported_intervals": "1m, 5m, 1h, 1d, 1wk, 1mo",
+                "global_coverage": True,
+            },
             "ccxt": {
                 "name": "ccxt",
                 "description": "Cryptocurrency data from 100+ exchanges via CCXT",
@@ -137,6 +145,7 @@ class DataFetchService(BaseService):
         "polygon": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"],
         "finnhub": ["1m", "5m", "15m", "30m", "1h", "1d", "1wk", "1mo"],
         "fmp": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"],
+        "eodhd": ["1m", "5m", "1h", "1d", "1wk", "1mo"],
         "ccxt": [
             "1m",
             "5m",

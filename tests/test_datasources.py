@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pandas as pd
 import pytest
 
+from connors_datafetch.datasources.eodhd import EodhdDataSource
 from connors_datafetch.datasources.finnhub import FinnhubDataSource
 from connors_datafetch.datasources.fmp import FinancialModelingPrepDataSource
 from connors_datafetch.datasources.polygon import PolygonDataSource
@@ -657,3 +658,202 @@ class TestFMPDataSource:
         # Verify correct endpoint for intraday data
         call_args = mock_get.call_args
         assert "historical-chart/5min/AAPL" in call_args[0][0]
+
+
+class TestEodhdDataSource:
+    """Test EODHD data source"""
+
+    @patch("os.getenv")
+    def test_init_with_env_api_key(self, mock_getenv: Mock) -> None:
+        """Test initialization with environment variable API key"""
+        mock_getenv.return_value = "env_eodhd_key_123"
+        eodhd_source = EodhdDataSource()
+        mock_getenv.assert_called_once_with("EODHD_API_KEY")
+        assert eodhd_source.api_key == "env_eodhd_key_123"
+
+    def test_init_with_custom_api_key(self) -> None:
+        """Test initialization with custom API key"""
+        custom_key = "test_eodhd_key_123"
+        eodhd_source = EodhdDataSource(api_key=custom_key)
+        assert eodhd_source.api_key == custom_key
+
+    @patch("os.getenv")
+    def test_init_without_api_key_raises_error(self, mock_getenv: Mock) -> None:
+        """Test that initialization without API key raises ValueError"""
+        mock_getenv.return_value = None
+
+        with pytest.raises(ValueError, match="EODHD API key is required"):
+            EodhdDataSource()
+
+        mock_getenv.assert_called_once_with("EODHD_API_KEY")
+
+    @patch("requests.Session.get")
+    def test_fetch_daily_data_success(self, mock_get: Mock) -> None:
+        """Test successful daily data fetch from EODHD"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "date": "2023-01-01",
+                "open": 100.0,
+                "high": 102.0,
+                "low": 99.0,
+                "close": 101.0,
+                "adjusted_close": 100.5,
+                "volume": 1000,
+            },
+            {
+                "date": "2023-01-02",
+                "open": 101.0,
+                "high": 103.0,
+                "low": 100.0,
+                "close": 102.0,
+                "adjusted_close": 101.5,
+                "volume": 1100,
+            },
+        ]
+        mock_get.return_value = mock_response
+
+        eodhd_source = EodhdDataSource(api_key="test_key")
+        result = eodhd_source.fetch("AAPL.US", "2023-01-01", "2023-01-02")
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 2
+        assert list(result.columns) == ["open", "high", "low", "close", "volume"]
+        assert isinstance(result.index, pd.DatetimeIndex)
+        assert result.index.name == "date"
+
+        # Verify API call
+        mock_get.assert_called_once()
+        call_args = mock_get.call_args
+        assert "eodhd.com/api/eod/AAPL.US" in call_args[0][0]
+        assert call_args[1]["params"]["api_token"] == "test_key"
+        assert call_args[1]["params"]["from"] == "2023-01-01"
+        assert call_args[1]["params"]["to"] == "2023-01-02"
+        assert call_args[1]["params"]["period"] == "d"
+        assert call_args[1]["params"]["fmt"] == "json"
+
+    @patch("requests.Session.get")
+    def test_fetch_appends_us_exchange_suffix(self, mock_get: Mock) -> None:
+        """Test that symbols without an exchange suffix default to .US"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "date": "2023-01-01",
+                "open": 100.0,
+                "high": 102.0,
+                "low": 99.0,
+                "close": 101.0,
+                "adjusted_close": 100.5,
+                "volume": 1000,
+            }
+        ]
+        mock_get.return_value = mock_response
+
+        eodhd_source = EodhdDataSource(api_key="test_key")
+        eodhd_source.fetch("AAPL", "2023-01-01", "2023-01-02")
+
+        call_args = mock_get.call_args
+        assert "eodhd.com/api/eod/AAPL.US" in call_args[0][0]
+
+    @patch("requests.Session.get")
+    def test_fetch_intraday_data(self, mock_get: Mock) -> None:
+        """Test fetch with intraday intervals uses intraday endpoint"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "timestamp": 1704189000,
+                "gmtoffset": 0,
+                "datetime": "2024-01-02 09:30:00",
+                "open": 100.0,
+                "high": 102.0,
+                "low": 99.0,
+                "close": 101.0,
+                "volume": 1000,
+            }
+        ]
+        mock_get.return_value = mock_response
+
+        eodhd_source = EodhdDataSource(api_key="test_key")
+        result = eodhd_source.fetch("AAPL.US", "2024-01-01", "2024-01-02", "5m")
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 1
+        assert list(result.columns) == ["open", "high", "low", "close", "volume"]
+        assert isinstance(result.index, pd.DatetimeIndex)
+        assert result.index.name == "date"
+
+        # Verify intraday endpoint with Unix timestamps
+        call_args = mock_get.call_args
+        assert "eodhd.com/api/intraday/AAPL.US" in call_args[0][0]
+        assert call_args[1]["params"]["interval"] == "5m"
+        assert call_args[1]["params"]["from"] == str(
+            int(pd.to_datetime("2024-01-01").timestamp())
+        )
+        assert call_args[1]["params"]["to"] == str(
+            int(pd.to_datetime("2024-01-02").timestamp())
+        )
+
+    @patch("requests.Session.get")
+    def test_fetch_data_with_intervals(self, mock_get: Mock) -> None:
+        """Test data fetch with different EOD periods"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "date": "2023-01-01",
+                "open": 100.0,
+                "high": 102.0,
+                "low": 99.0,
+                "close": 101.0,
+                "adjusted_close": 100.5,
+                "volume": 1000,
+            }
+        ]
+        mock_get.return_value = mock_response
+
+        eodhd_source = EodhdDataSource(api_key="test_key")
+
+        # Weekly interval maps to period "w"
+        eodhd_source.fetch("AAPL.US", "2023-01-01", "2023-01-02", "1wk")
+        call_args = mock_get.call_args
+        assert call_args[1]["params"]["period"] == "w"
+
+        # Monthly interval maps to period "m"
+        eodhd_source.fetch("AAPL.US", "2023-01-01", "2023-01-02", "1mo")
+        call_args = mock_get.call_args
+        assert call_args[1]["params"]["period"] == "m"
+
+    @patch("requests.Session.get")
+    def test_fetch_data_no_results(self, mock_get: Mock) -> None:
+        """Test fetch when API returns no results"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = []
+        mock_get.return_value = mock_response
+
+        eodhd_source = EodhdDataSource(api_key="test_key")
+
+        with pytest.raises(RuntimeError, match="EODHD returned no results"):
+            eodhd_source.fetch("INVALID.US", "2023-01-01", "2023-01-02")
+
+    @patch("requests.Session.get")
+    def test_fetch_data_http_error(self, mock_get: Mock) -> None:
+        """Test fetch when API returns HTTP error"""
+        mock_response = Mock()
+        mock_response.status_code = 401
+        mock_response.text = "Unauthorized"
+        mock_get.return_value = mock_response
+
+        eodhd_source = EodhdDataSource(api_key="invalid_key")
+
+        with pytest.raises(RuntimeError, match="EODHD HTTP 401"):
+            eodhd_source.fetch("AAPL.US", "2023-01-01", "2023-01-02")
+
+    def test_fetch_unsupported_interval(self) -> None:
+        """Test that unsupported interval raises ValueError"""
+        eodhd_source = EodhdDataSource(api_key="test_key")
+        with pytest.raises(ValueError, match="not supported for EODHD"):
+            eodhd_source.fetch("AAPL.US", "2024-01-01", "2024-01-02", "15m")
