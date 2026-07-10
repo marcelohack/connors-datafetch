@@ -49,6 +49,10 @@ class YfinanceDataSource:
                 f"Supported intervals: {supported}"
             )
 
+        # Accept EODHD-style index symbols (GSPC.INDX -> ^GSPC)
+        if symbol.upper().endswith(".INDX"):
+            symbol = f"^{symbol[:-5]}"
+
         # Validate date range against interval limits
         max_days = self.SUPPORTED_INTERVALS[interval]
         if max_days is not None:
