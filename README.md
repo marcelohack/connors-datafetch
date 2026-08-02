@@ -8,7 +8,7 @@ Financial data downloader with support for multiple data sources including stock
 
 ## Features
 
-- **Multiple Data Sources**: yfinance, Polygon.io, Finnhub, FMP, EODHD, and CCXT (100+ crypto exchanges)
+- **Multiple Data Sources**: yfinance, Polygon.io, Finnhub, FMP, EODHD, Alpaca (US equities incl. intraday), and CCXT (100+ crypto exchanges)
 - **Flexible Date Ranges**: Use predefined timespans (1Y, 6M, YTD) or custom date ranges
 - **Multiple Markets**: Support for global markets (US, Australia, Brazil, Canada, UK, Germany, Japan, Hong Kong, India)
 - **Multiple Formats**: Export to CSV or JSON
@@ -44,6 +44,8 @@ For API-based datasources, you'll need API keys:
 - Finnhub: Set `FINNHUB_API_KEY` environment variable
 - FMP: Set `FMP_API_KEY` environment variable
 - EODHD: Set `EODHD_API_KEY` environment variable
+- Alpaca: Set `ALPACA_API_KEY` and `ALPACA_SECRET_KEY` (`ALPACA_API_SECRET` also accepted).
+  Optionally `ALPACA_DATA_FEED` (`sip` default, or `iex` for free accounts — see below)
 
 ## Quick Start
 
@@ -67,6 +69,20 @@ if result.success:
     df = result.data
     print(f"Downloaded {len(df)} records")
     print(f"Saved to: {result.file_path}")
+```
+
+A datasource can also be used directly when you need its own options — here Alpaca's
+feed and adjustment, which the generic service call doesn't expose:
+
+```python
+from connors_datafetch.datasources.alpaca import AlpacaDataSource
+
+# Regular-trading-hours 5m bars for a session strategy
+ds = AlpacaDataSource(feed="sip", adjustment="all")
+df = ds.fetch("SPY", "2025-08-01", "2026-07-31", "5m")
+
+rth = df.tz_convert("America/New_York").between_time("09:30", "15:55")
+print(f"{len(rth):,} RTH bars over {rth.index.normalize().nunique()} sessions")
 ```
 
 ### Standalone CLI
@@ -98,6 +114,14 @@ connors-datafetch --datasource polygon --ticker TSLA --start 2023-06-01 --end 20
 connors-datafetch --datasource fmp --ticker AAPL --timespan 3M
 connors-datafetch --datasource eodhd --ticker AAPL --timespan 1Y
 
+# Intraday US equities via Alpaca (a year of 5-minute SPY bars)
+connors-datafetch --datasource alpaca --ticker SPY --interval 5m \
+    --start 2025-08-01 --end 2026-07-31
+
+# Same, on the free single-venue IEX feed instead of the consolidated tape
+ALPACA_DATA_FEED=iex connors-datafetch --datasource alpaca --ticker SPY \
+    --interval 5m --timespan 1M
+
 # List available options
 connors-datafetch --list-datasources
 connors-datafetch --list-markets
@@ -128,10 +152,35 @@ The `connors-datafetch` command is installed with the package (`connors_datafetc
   - Supported intervals: 1m, 5m, 15m, 30m, 1h, 1d, 1wk, 1mo
 - **fmp**: Financial Modeling Prep data
   - Supported intervals: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1wk, 1mo
+- **alpaca**: Alpaca Market Data — **US equities only** (use `ccxt` for crypto)
+  - Supported intervals: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 1d, 1wk, 1mo
+  - History back to **2016**, sourced from the CTA and UTP consolidated tapes
+  - Credentials: `ALPACA_API_KEY` + `ALPACA_SECRET_KEY` (`ALPACA_API_SECRET` accepted as an alias)
+  - **This is the project's intraday equities source.** The alternatives don't work for
+    session-based strategies: EODHD rejects intraday on the free plan
+    (`403 Only EOD data allowed for free users`), and yfinance caps 5m at roughly 1–2
+    months *and* returns exchange-local timestamps labelled UTC. Alpaca returns true
+    UTC — `13:30:00Z` is the 09:30 New York open during EDT.
+  - **Feed choice changes what the data means.** `sip` (default) is the full
+    consolidated tape; `iex` is a single venue carrying roughly 3% of consolidated
+    volume. For SPY's 09:30 bar that is ~1.9M shares versus ~50k. Opening ranges,
+    session highs/lows and volume filters computed from IEX are *not* what the market
+    saw. On a `sip` entitlement failure the datasource **raises rather than falling
+    back**, so a plan lapse can't silently swap the tape for a fraction of it. Free
+    accounts opt in deliberately with `ALPACA_DATA_FEED=iex` or `feed="iex"`.
+    `sip` with unrestricted history requires Alpaca's paid data plan.
+  - **Intraday returns extended-hours bars** (04:00–20:00 NY), not just the regular
+    session. Consumers wanting regular trading hours only must filter — expect exactly
+    78 five-minute bars per RTH session (390 minutes ÷ 5).
+  - `adjustment` defaults to `all`; anything less than split adjustment turns historical
+    splits into fake price gaps.
+  - Pagination is automatic (10,000 bars per request).
+
 - **eodhd**: EODHD end-of-day and intraday market data
   - Supported intervals: 1m, 5m, 1h, 1d, 1wk, 1mo
   - Symbols use EODHD exchange suffixes (e.g. `AAPL.US`, `BHP.AU`); bare tickers default to `.US`
   - Intraday range limits: 1m (120 days), 5m (600 days), 1h (7200 days)
+  - **Intraday requires a paid plan** — free keys get `403 Only EOD data allowed for free users`
   - Indices are available via the `INDX` virtual exchange (Yahoo-style codes without the caret):
 
     | Index | EODHD symbol |
@@ -179,6 +228,11 @@ Downloaded files are saved to `~/.connors/downloads/datasets/` (or `$CONNORS_HOM
 Filename format:
 - Stocks: `{ticker}_{market}_{start}_{end}_{interval}.{csv|json}`
 - Crypto: `{ticker}_{exchange}_{start}_{end}_{interval}.{csv|json}`
+
+The filename records the ticker, range and interval but **not the datasource or feed**
+unless you pass `--include-datasource`. Two files of the same symbol and interval from
+different sources — or from Alpaca's `sip` versus `iex` feed — are indistinguishable by
+name and will overwrite each other. Use `--include-datasource` when keeping both.
 
 ## Development
 
