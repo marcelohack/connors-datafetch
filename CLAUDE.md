@@ -108,6 +108,15 @@ Each datasource is a separate module in `datasources/` that registers itself:
 - Intervals: 1m, 5m, 1h (intraday endpoint), 1d, 1wk, 1mo (EOD endpoint)
 - Indices use the `INDX` virtual exchange (Yahoo-style codes without the caret): `GSPC.INDX` (S&P 500), `DJI.INDX` (Dow Jones), `IXIC.INDX` (NASDAQ Composite), `NDX.INDX` (NASDAQ 100), `VIX.INDX` (CBOE VIX), `AXJO.INDX` (ASX 200), `AORD.INDX` (ASX All Ordinaries), `BVSP.INDX` (Bovespa/IBOVESPA), `FTSE.INDX` (FTSE 100), `GDAXI.INDX` (DAX), `N225.INDX` (Nikkei 225)
 
+**alpaca** (`datasources/alpaca.py`)
+- Alpaca Market Data API — **US equities only** (use `ccxt` for crypto), daily and intraday back to 2016
+- Requires `ALPACA_API_KEY` + `ALPACA_SECRET_KEY` (`ALPACA_API_SECRET` accepted as an alias)
+- Intervals: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 1d, 1wk, 1mo
+- **This is the intraday equities source.** EODHD rejects intraday on the free plan (`403 Only EOD data allowed for free users`) and yfinance caps 5m at ~1–2 months *and* returns exchange-local timestamps stamped as UTC. Alpaca returns true UTC, which session-based strategies (ORB family) depend on.
+- **Feed choice changes what the data means.** `sip` (default) is the full consolidated tape; `iex` is a single venue at ~3% of consolidated volume. On a `sip` entitlement failure the source **raises rather than falling back** — a silent downgrade would swap the tape for a fraction of it while the caller still believed it had full-market highs/lows, which quietly invalidates opening ranges and volume filters. Free accounts must opt in via `ALPACA_DATA_FEED=iex`.
+- `adjustment` defaults to `all`; anything less than split adjustment turns historical splits into fake gaps.
+- Returns **extended-hours bars** for intraday intervals (04:00–20:00 NY), not just the regular session. Consumers that need RTH only (again, the ORB family) must filter — 78 five-minute bars per regular session is the expected count.
+
 **polygon, finnhub, fmp** (API-based, require keys)
 - Set via environment variables: `POLYGON_API_KEY`, `FINNHUB_API_KEY`, `FMP_API_KEY`
 
@@ -171,6 +180,8 @@ Examples:
 - `FINNHUB_API_KEY`: Finnhub API key
 - `FMP_API_KEY`: Financial Modeling Prep API key
 - `EODHD_API_KEY`: EODHD API key
+- `ALPACA_API_KEY` / `ALPACA_SECRET_KEY`: Alpaca Market Data credentials (`ALPACA_API_SECRET` also accepted)
+- `ALPACA_DATA_FEED`: `sip` (default, paid) or `iex` (free, single venue)
 - `CCXT_API_KEY`: CCXT API key (optional, for private endpoints)
 - `CCXT_SECRET`: CCXT secret (optional, for private endpoints)
 

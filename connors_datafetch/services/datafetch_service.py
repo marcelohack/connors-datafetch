@@ -14,6 +14,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 
+import connors_datafetch.datasources.alpaca  # noqa: F401
 import connors_datafetch.datasources.ccxt  # noqa: F401
 import connors_datafetch.datasources.eodhd  # noqa: F401
 import connors_datafetch.datasources.polygon
@@ -96,6 +97,22 @@ class DataFetchService(BaseService):
                 "supported_intervals": "1m, 5m, 1h, 1d, 1wk, 1mo",
                 "global_coverage": True,
             },
+            "alpaca": {
+                "name": "alpaca",
+                "description": (
+                    "Alpaca Market Data - US equities, consolidated tape (CTA/UTP), "
+                    "daily and intraday back to 2016"
+                ),
+                "requires_api_key": True,
+                "supported_intervals": ("1m, 5m, 15m, 30m, 1h, 2h, 4h, 1d, 1wk, 1mo"),
+                "global_coverage": False,
+                "notes": (
+                    "US equities only (use ccxt for crypto). The 'sip' feed "
+                    "(consolidated tape) needs a paid data plan; free accounts "
+                    "must set ALPACA_DATA_FEED=iex, which is a single venue at "
+                    "~3% of consolidated volume."
+                ),
+            },
             "ccxt": {
                 "name": "ccxt",
                 "description": "Cryptocurrency data from 100+ exchanges via CCXT",
@@ -146,6 +163,7 @@ class DataFetchService(BaseService):
         "finnhub": ["1m", "5m", "15m", "30m", "1h", "1d", "1wk", "1mo"],
         "fmp": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"],
         "eodhd": ["1m", "5m", "1h", "1d", "1wk", "1mo"],
+        "alpaca": ["1m", "5m", "15m", "30m", "1h", "2h", "4h", "1d", "1wk", "1mo"],
         "ccxt": [
             "1m",
             "5m",
