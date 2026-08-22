@@ -142,3 +142,6 @@ Thumbs.db
 # Downloaded data (from this project)
 # Uncomment if you don't want to track downloaded datasets locally
 # ~/.connors/
+
+# Claude Code agent/skill symlinks (workspace wiring)
+.claude/
